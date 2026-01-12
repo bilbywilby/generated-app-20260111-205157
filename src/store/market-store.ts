@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { ItemMapping, HourlyPriceData } from '@/lib/osrs-api';
+import { ApiResponse } from '@shared/types';
 interface FlippingFilters {
   minProfit: number;
   minROI: number;
@@ -14,13 +15,16 @@ interface MarketState {
   latest1hPrices: Record<number, HourlyPriceData>;
   previous1hPrices: Record<number, HourlyPriceData>;
   flippingFilters: FlippingFilters;
+  watchlist: number[];
   setItems: (items: ItemMapping[]) => void;
   setLoading: (loading: boolean) => void;
   setSelectedItemId: (id: number | null) => void;
   updateHourlyPrices: (prices: Record<number, HourlyPriceData>) => void;
   setFlippingFilters: (filters: Partial<FlippingFilters>) => void;
+  fetchWatchlist: () => Promise<void>;
+  toggleWatchlist: (itemId: number) => Promise<void>;
 }
-export const useMarketStore = create<MarketState>((set) => ({
+export const useMarketStore = create<MarketState>((set, get) => ({
   items: {},
   itemIds: [],
   isLoading: true,
@@ -33,6 +37,7 @@ export const useMarketStore = create<MarketState>((set) => ({
     minVolume: 10,
     membersOnly: false,
   },
+  watchlist: [],
   setItems: (itemsList) => {
     const itemMap = itemsList.reduce((acc, item) => {
       acc[item.id] = item;
@@ -51,4 +56,37 @@ export const useMarketStore = create<MarketState>((set) => ({
     set((state) => ({
       flippingFilters: { ...state.flippingFilters, ...filters },
     })),
+  fetchWatchlist: async () => {
+    try {
+      const response = await fetch('/api/watchlist');
+      const result = await response.json() as ApiResponse<number[]>;
+      if (result.success && result.data) {
+        set({ watchlist: result.data });
+      }
+    } catch (error) {
+      console.error('Failed to fetch watchlist', error);
+    }
+  },
+  toggleWatchlist: async (itemId) => {
+    // Optimistic update
+    const current = get().watchlist;
+    const exists = current.includes(itemId);
+    const next = exists ? current.filter(id => id !== itemId) : [...current, itemId];
+    set({ watchlist: next });
+    try {
+      const response = await fetch('/api/watchlist/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId }),
+      });
+      const result = await response.json() as ApiResponse<number[]>;
+      if (result.success && result.data) {
+        set({ watchlist: result.data });
+      }
+    } catch (error) {
+      console.error('Failed to toggle watchlist item', error);
+      // Revert on error
+      set({ watchlist: current });
+    }
+  },
 }));
