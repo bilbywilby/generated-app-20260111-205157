@@ -21,3 +21,11 @@ export function calculatePercentChange(current: number, previous: number): strin
   const sign = change >= 0 ? "+" : "";
   return `${sign}${change.toFixed(1)}%`;
 }
+/**
+ * Generates a standardized URL for OSRS item icons from the wiki.
+ */
+export function getItemIconUrl(name: string): string {
+  if (!name) return '';
+  const formattedName = name.replace(/ /g, '_');
+  return `https://static.runescape.wiki/images/${formattedName}_detail.png`;
+}

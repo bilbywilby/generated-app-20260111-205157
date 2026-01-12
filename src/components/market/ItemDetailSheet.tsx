@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Info, Star, Clock } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getItemIconUrl } from '@/lib/utils';
 import { format } from 'date-fns';
 export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
   const selectedId = useMarketStore(s => s.selectedItemId);
@@ -36,9 +36,9 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
         <SheetHeader className="space-y-4">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
-              <div className="p-4 bg-stone-900 border border-stone-800 rounded-xl">
+              <div className="p-4 bg-stone-900 border border-stone-800 rounded-xl shadow-inner shadow-black/40">
                 <img
-                  src={`https://static.runescape.wiki/images/${item.name.replace(/ /g, '_')}_detail.png`}
+                  src={getItemIconUrl(item.name)}
                   alt={item.name}
                   className="w-12 h-12 object-contain"
                 />
@@ -52,7 +52,7 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
                 </div>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => toggleWatchlist(item.id)}
               className={cn(
                 "p-2 rounded-full border transition-all",
@@ -105,7 +105,7 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
         )}
         <Separator className="my-8 bg-stone-800" />
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between h-8">
             <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">Price Analytics</h3>
             <Tabs value={timeframe} onValueChange={(v: any) => setTimeframe(v)} className="w-auto">
               <TabsList className="bg-stone-900 border border-stone-800 h-8 p-1">
