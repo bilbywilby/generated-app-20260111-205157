@@ -37,7 +37,7 @@ export function TrendCard({ title, icon, items, onSelect }: TrendCardProps) {
                 <div className="flex items-center gap-3 relative z-10">
                   <div className="w-8 h-8 flex items-center justify-center bg-stone-950 border border-stone-800/60 rounded group-hover:border-amber-500/20 transition-colors">
                     <img
-                      src={getItemIconUrl(detail.name)}
+                      src={getItemIconUrl(detail.name, detail.id)}
                       alt=""
                       className="w-5 h-5 object-contain opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all duration-300"
                       loading="lazy"

@@ -36,12 +36,12 @@ export function PriceDatabasePage() {
               <Database className="w-6 h-6 text-amber-500" />
               Terminal Asset Database
             </h1>
-            <p className="text-stone-500 text-xs font-mono uppercase tracking-widest">Real-time indexing: {itemIds.length} items</p>
+            <p className="text-stone-500 text-xs font-mono uppercase tracking-widest">Real-time indexing: {itemIds.length.toLocaleString()} items</p>
           </div>
           <div className="relative w-full md:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-500" />
             <Input
-              placeholder="Asset query..."
+              placeholder="Filter by name..."
               className="h-9 pl-9 bg-stone-900 border-stone-800 text-stone-200 text-xs font-mono"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -49,7 +49,7 @@ export function PriceDatabasePage() {
           </div>
         </div>
         <div className="bg-stone-900/30 border border-stone-800/60 rounded-xl overflow-hidden shadow-2xl">
-          <div className="max-h-[70vh] overflow-y-auto">
+          <div className="max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-stone-800">
             <Table>
               <TableHeader className="bg-stone-950/80 sticky top-0 z-10">
                 <TableRow className="border-stone-800 hover:bg-transparent">
@@ -71,7 +71,7 @@ export function PriceDatabasePage() {
                   return (
                     <TableRow
                       key={item.id}
-                      className="border-stone-800/50 hover:bg-stone-950/50 cursor-pointer group"
+                      className="border-stone-800/50 hover:bg-stone-900/40 cursor-pointer group transition-colors"
                       onClick={() => setSelectedItemId(item.id)}
                     >
                       <TableCell className="p-1 px-3" onClick={(e) => { e.stopPropagation(); toggleWatchlist(item.id); }}>
@@ -79,14 +79,14 @@ export function PriceDatabasePage() {
                       </TableCell>
                       <TableCell className="py-1.5 px-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 flex items-center justify-center bg-stone-950 border border-stone-800 rounded">
-                            <img src={getItemIconUrl(item.name)} alt="" className="w-4 h-4 object-contain" />
+                          <div className="w-6 h-6 flex items-center justify-center bg-stone-950 border border-stone-800 rounded shrink-0">
+                            <img src={getItemIconUrl(item.name, item.id)} alt="" className="w-4 h-4 object-contain" />
                           </div>
-                          <span className="text-[11px] font-bold text-stone-200 truncate max-w-[150px]">{item.name}</span>
+                          <span className="text-[11px] font-bold text-stone-200 truncate max-w-[180px]">{item.name}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right py-1.5 px-3 font-mono text-[11px] text-stone-500">
-                        {item.limit?.toLocaleString() ?? '���'}
+                        {item.limit?.toLocaleString() ?? '∞'}
                       </TableCell>
                       <TableCell className="text-right py-1.5 px-3 font-mono text-[11px] text-emerald-400">
                         {price?.high && price.high > 0 ? price.high.toLocaleString() : '—'}

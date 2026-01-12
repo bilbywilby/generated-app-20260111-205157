@@ -10,8 +10,8 @@ import {
 import { useMarketStore } from '@/store/market-store';
 import { formatGP, cn, getItemIconUrl, isSinkItem } from '@/lib/utils';
 import { calculateAlchProfit } from '@/lib/osrs-api';
-import { ArrowUpDown, Info } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ArrowUpDown } from 'lucide-react';
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 interface FlippingTableProps {
   data: any[];
@@ -20,7 +20,8 @@ export function FlippingTable({ data }: FlippingTableProps) {
   const items = useMarketStore(s => s.items);
   const setSelectedId = useMarketStore(s => s.setSelectedItemId);
   const naturePrice = useMarketStore(s => s.naturePrice);
-  const hideSinkItems = useMarketStore(s => s.flippingFilters.hideSinkItems);
+  const filters = useMarketStore(s => s.flippingFilters);
+  const hideSinkItems = filters.hideSinkItems;
   const [sortKey, setSortKey] = React.useState('profit');
   const [sortDir, setSortDir] = React.useState<'asc' | 'desc'>('desc');
   const processedData = React.useMemo(() => {
@@ -90,11 +91,11 @@ export function FlippingTable({ data }: FlippingTableProps) {
                   <TableCell className="py-1.5 px-3">
                     <div className="flex items-center gap-2 max-w-[180px]">
                       <div className="w-6 h-6 flex items-center justify-center bg-stone-950 border border-stone-800 rounded shrink-0">
-                        <img src={getItemIconUrl(item.name)} alt="" className="w-4 h-4 object-contain opacity-80 group-hover:scale-110" />
+                        <img src={getItemIconUrl(item.name, item.id)} alt="" className="w-4 h-4 object-contain opacity-80 group-hover:scale-110" />
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="text-[11px] font-bold text-stone-200 truncate">{item.name}</span>
-                        {isSink && <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[8px] h-3.5 px-1 w-fit">SINK</Badge>}
+                        {isSink && <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[8px] h-3.5 px-1 w-fit mt-0.5">SINK</Badge>}
                       </div>
                     </div>
                   </TableCell>
