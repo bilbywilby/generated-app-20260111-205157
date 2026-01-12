@@ -7,9 +7,8 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveConta
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Info, Star, Clock, Wand2, Hash, Copy, Check, ShieldAlert } from 'lucide-react';
+import { Info, Star, Clock, Wand2, Hash, ShieldAlert } from 'lucide-react';
 import { cn, getItemIconUrl, isSinkItem } from '@/lib/utils';
-import { format } from 'date-fns';
 import { toast } from 'sonner';
 export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
   const selectedId = useMarketStore(s => s.selectedItemId);
@@ -31,15 +30,14 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
     enabled: !!selectedId,
   });
   const margin = React.useMemo(() => {
-    if (!currentPrice || currentPrice.high === 0 || currentPrice.low === 0) return null;
+    if (!currentPrice || !currentPrice.high || !currentPrice.low) return null;
     return calculateMargin(currentPrice.high, currentPrice.low);
   }, [currentPrice]);
   const alchAnalysis = React.useMemo(() => {
     if (!item || !currentPrice || !item.highalch) return null;
     const stats = calculateAlchProfit(item.highalch, currentPrice.low, naturePrice);
-    const hourlyVol = selectedId ? (latest1hPrices[selectedId]?.highPriceVolume || 0) + (latest1hPrices[selectedId]?.lowPriceVolume || 0) : 0;
-    return { ...stats, dailyVol: hourlyVol * 24 };
-  }, [item, currentPrice, naturePrice, selectedId, latest1hPrices]);
+    return stats;
+  }, [item, currentPrice, naturePrice]);
   const copyId = () => {
     if (!selectedId) return;
     navigator.clipboard.writeText(selectedId.toString());
@@ -55,14 +53,14 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-stone-900 border border-stone-800 rounded-lg shadow-xl shadow-black/40">
-                <img src={getItemIconUrl(item.name)} alt={item.name} className="w-10 h-10 object-contain drop-shadow-md" />
+                <img src={getItemIconUrl(item.name, item.id)} alt={item.name} className="w-10 h-10 object-contain drop-shadow-md" />
               </div>
               <div>
                 <SheetTitle className="text-xl font-bold text-stone-100">{item.name}</SheetTitle>
                 <p className="text-[11px] text-stone-500 italic max-w-xs truncate">"{item.examine}"</p>
                 <div className="flex gap-2 mt-2">
                   {item.members && <Badge className="bg-amber-900/10 text-amber-600 border-amber-900/20 text-[8px] h-4 font-mono">MEMB</Badge>}
-                  <Badge className="bg-stone-900 border-stone-800 text-stone-500 text-[8px] h-4 font-mono">LIMIT: {item.limit?.toLocaleString() ?? '∞'}</Badge>
+                  <Badge className="bg-stone-900 border-stone-800 text-stone-500 text-[8px] h-4 font-mono uppercase tracking-tighter">Limit: {item.limit?.toLocaleString() ?? '∞'}</Badge>
                   <button onClick={copyId} className="h-4 flex items-center gap-1.5 px-2 rounded bg-stone-900 border border-stone-800 hover:bg-stone-800 transition-transform active:scale-95 group">
                     <Hash className="w-2.5 h-2.5 text-stone-600 group-hover:text-amber-500" />
                     <span className="text-[9px] font-mono text-stone-500">{item.id}</span>
@@ -115,15 +113,24 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
         {isSink && (
           <div className="mt-4 p-4 bg-amber-500/[0.03] border border-amber-500/10 rounded-xl">
             <div className="flex items-center gap-1.5 mb-1.5"><ShieldAlert className="w-3 h-3 text-amber-500" /> <span className="text-[9px] font-bold text-amber-500 uppercase">Regulated Asset</span></div>
-            <p className="text-[10px] text-stone-500 leading-tight">Jagex Item Sink active: Global GE tax buyback pool targets this item for deletion.</p>
+            <p className="text-[10px] text-stone-500 leading-tight">Jagex Item Sink active: Global GE tax buyback pool targets this item for deletion to stabilize economy.</p>
           </div>
         )}
         {alchAnalysis && (
           <div className="mt-4 p-4 bg-stone-900/30 border border-stone-800/60 rounded-xl">
-            <div className="flex items-center justify-between mb-3"><span className="text-[9px] font-bold text-amber-500 uppercase flex items-center gap-1.5"><Wand2 className="w-3 h-3" /> Alch Floor</span> <span className="text-[9px] font-mono text-stone-600 uppercase">Nature: {naturePrice}gp</span></div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[9px] font-bold text-amber-500 uppercase flex items-center gap-1.5"><Wand2 className="w-3 h-3" /> Alch Floor</span>
+              <span className="text-[9px] font-mono text-stone-600 uppercase">Nature: {naturePrice}gp</span>
+            </div>
             <div className="grid grid-cols-2 gap-2">
-               <div className="text-center bg-stone-950 p-2 rounded border border-stone-800/50"><p className="text-[9px] text-stone-600 uppercase mb-0.5">Profit</p><p className={cn("font-mono font-bold text-[12px]", alchAnalysis.profit > 0 ? "text-amber-500" : "text-rose-500")}>{alchAnalysis.profit.toLocaleString()}</p></div>
-               <div className="text-center bg-stone-950 p-2 rounded border border-stone-800/50"><p className="text-[9px] text-stone-600 uppercase mb-0.5">ROI</p><p className={cn("font-mono font-bold text-[12px]", alchAnalysis.roi > 0 ? "text-amber-500" : "text-rose-500")}>{alchAnalysis.roi.toFixed(1)}%</p></div>
+               <div className="text-center bg-stone-950 p-2 rounded border border-stone-800/50">
+                 <p className="text-[9px] text-stone-600 uppercase mb-0.5">Profit</p>
+                 <p className={cn("font-mono font-bold text-[12px]", alchAnalysis.profit > 0 ? "text-amber-500" : "text-rose-500")}>{alchAnalysis.profit.toLocaleString()}</p>
+               </div>
+               <div className="text-center bg-stone-950 p-2 rounded border border-stone-800/50">
+                 <p className="text-[9px] text-stone-600 uppercase mb-0.5">ROI</p>
+                 <p className={cn("font-mono font-bold text-[12px]", alchAnalysis.roi > 0 ? "text-amber-500" : "text-rose-500")}>{alchAnalysis.roi.toFixed(1)}%</p>
+               </div>
             </div>
           </div>
         )}
@@ -146,7 +153,7 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={history}>
+                <AreaChart data={history || []}>
                   <defs><linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2}/><stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/></linearGradient></defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} strokeOpacity={0.3} />
                   <XAxis dataKey="timestamp" hide />

@@ -2,7 +2,6 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { ITEM_SINK_MAPPING, SinkMetadata } from "./sink-list"
 import { HourlyPriceData } from "./osrs-api"
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -33,28 +32,26 @@ export function calculatePercentChange(current: number, previous: number): strin
   return `${sign}${change.toFixed(1)}%`;
 }
 /**
- * Generates a standardized URL for OSRS item icons from the wiki.
- * Handles spaces, special characters, and formatting.
+ * Standardized OSRS item icon resolution.
+ * Prioritizes the static ID-based URL as it is most reliable.
  */
-export function getItemIconUrl(name: string): string {
+export function getItemIconUrl(name: string, id?: number): string {
+  if (id !== undefined && id !== null) {
+    return `https://prices.runescape.wiki/static/items/${id}.png`;
+  }
   if (!name) return '';
-  // The wiki typically expects spaces replaced with underscores and special characters escaped or handled.
-  // Apostrophes are usually kept as is or encoded in the URL.
   const formattedName = name.replace(/ /g, '_');
   return `https://static.runescape.wiki/images/${formattedName}_detail.png`;
 }
-
 export function isSinkItem(id: number): boolean {
   return !!ITEM_SINK_MAPPING[id];
 }
-
 export function getSinkData(id: number): SinkMetadata | undefined {
   return ITEM_SINK_MAPPING[id];
 }
-
 export function calculateIndexPerformance(
-  ids: number[], 
-  latestPrices: Record<number, HourlyPriceData>, 
+  ids: number[],
+  latestPrices: Record<number, HourlyPriceData>,
   previousPrices: Record<number, HourlyPriceData>
 ): number {
   if (!ids.length) return 0;
