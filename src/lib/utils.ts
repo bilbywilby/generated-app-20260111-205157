@@ -1,5 +1,8 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { ITEM_SINK_MAPPING, SinkMetadata } from "./sink-list"
+import { HourlyPriceData } from "./osrs-api"
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -39,4 +42,31 @@ export function getItemIconUrl(name: string): string {
   // Apostrophes are usually kept as is or encoded in the URL.
   const formattedName = name.replace(/ /g, '_');
   return `https://static.runescape.wiki/images/${formattedName}_detail.png`;
+}
+
+export function isSinkItem(id: number): boolean {
+  return !!ITEM_SINK_MAPPING[id];
+}
+
+export function getSinkData(id: number): SinkMetadata | undefined {
+  return ITEM_SINK_MAPPING[id];
+}
+
+export function calculateIndexPerformance(
+  ids: number[], 
+  latestPrices: Record<number, HourlyPriceData>, 
+  previousPrices: Record<number, HourlyPriceData>
+): number {
+  if (!ids.length) return 0;
+  let totalChange = 0;
+  let validItems = 0;
+  ids.forEach(id => {
+    const curr = latestPrices[id]?.avgHighPrice;
+    const prev = previousPrices[id]?.avgHighPrice;
+    if (curr && prev && prev > 0) {
+      totalChange += ((curr - prev) / prev) * 100;
+      validItems++;
+    }
+  });
+  return validItems > 0 ? totalChange / validItems : 0;
 }

@@ -5,8 +5,9 @@ import { fetchLatestPrices } from '@/lib/osrs-api';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Star, Search, Database } from 'lucide-react';
-import { cn, getItemIconUrl } from '@/lib/utils';
+import { Star, Search, Database, Info } from 'lucide-react';
+import { cn, getItemIconUrl, isSinkItem } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 export function PriceDatabasePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const itemIds = useMarketStore(s => s.itemIds);
@@ -57,6 +58,7 @@ export function PriceDatabasePage() {
               <TableHead className="text-[10px] uppercase font-bold text-stone-500 text-right">High Price</TableHead>
               <TableHead className="text-[10px] uppercase font-bold text-stone-500 text-right text-amber-500/80">High Alch</TableHead>
               <TableHead className="text-[10px] uppercase font-bold text-stone-500 text-right text-stone-500">Low Alch</TableHead>
+              <TableHead className="text-[10px] uppercase font-bold text-stone-500 text-center">Stability</TableHead>
               <TableHead className="text-[10px] uppercase font-bold text-stone-500 text-center">Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -64,6 +66,7 @@ export function PriceDatabasePage() {
             {filteredItems.map((item) => {
               if (!item) return null;
               const isWatchlisted = watchlist.includes(item.id);
+              const isSink = isSinkItem(item.id);
               const price = latestPrices?.[item.id.toString()];
               return (
                 <TableRow
@@ -98,6 +101,22 @@ export function PriceDatabasePage() {
                   </TableCell>
                   <TableCell className="text-right font-mono text-xs text-stone-500">
                     {item.lowalch ? item.lowalch.toLocaleString() : 'N/A'}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {isSink && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/30 text-[9px] cursor-help">
+                              SINK
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-stone-900 border-stone-800 text-[10px] max-w-xs">
+                            This item is part of the Jagex Item Sink mechanism to stabilize market prices via GE Tax buybacks.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
                   </TableCell>
                   <TableCell className="text-center">
                     {item.members && <Badge variant="outline" className="text-[9px] border-amber-900/50 text-amber-600 px-1 py-0 h-4 uppercase">M</Badge>}

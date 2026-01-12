@@ -8,6 +8,7 @@ import { formatGP } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
+  Globe,
   TrendingUp,
   TrendingDown,
   BarChart3,
@@ -18,6 +19,10 @@ import {
   Cpu,
   RefreshCw
 } from 'lucide-react';
+import { MARKET_BASKETS, BasketCategory } from '@/lib/indices';
+import { calculateIndexPerformance, cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+
 export function HomePage() {
   const navigate = useNavigate();
   const latest1hPrices = useMarketStore(s => s.latest1hPrices);
@@ -137,6 +142,39 @@ export function HomePage() {
             </motion.div>
           ))}
         </div>
+
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-4">
+            <Globe className="w-4 h-4 text-stone-500" />
+            <h2 className="text-[10px] font-black text-stone-500 uppercase tracking-[0.2em]">Macro Market Indices</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+            {(Object.keys(MARKET_BASKETS) as BasketCategory[]).map((cat, i) => {
+              const perf = calculateIndexPerformance(MARKET_BASKETS[cat], latest1hPrices, previous1hPrices);
+              return (
+                <motion.div
+                  key={cat}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <Card className="bg-stone-900/40 border-stone-800 hover:bg-stone-800/40 transition-colors">
+                    <CardContent className="p-3">
+                      <p className="text-[9px] font-bold text-stone-500 uppercase mb-1">{cat}</p>
+                      <p className={cn(
+                        "text-xs font-mono font-bold",
+                        perf > 0 ? "text-emerald-500" : perf < 0 ? "text-rose-500" : "text-stone-400"
+                      )}>
+                        {perf > 0 ? '+' : ''}{perf.toFixed(2)}%
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <TrendCard title="My Watchlist" icon={<Star className="w-4 h-4 text-amber-500" />} items={watchlistItems} onSelect={setSelectedItemId} />
           <TrendCard title="Top Gainers" icon={<TrendingUp className="w-4 h-4 text-emerald-500" />} items={topGainers} onSelect={setSelectedItemId} />

@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useMarketStore } from '@/store/market-store';
-import { formatGP, cn, getItemIconUrl } from '@/lib/utils';
+import { formatGP, cn, getItemIconUrl, isSinkItem } from '@/lib/utils';
 import { calculateAlchProfit } from '@/lib/osrs-api';
 import { ArrowUpDown, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -19,16 +19,18 @@ export function FlippingTable({ data }: FlippingTableProps) {
   const items = useMarketStore(s => s.items);
   const setSelectedId = useMarketStore(s => s.setSelectedItemId);
   const naturePrice = useMarketStore(s => s.naturePrice);
+  const hideSinkItems = useMarketStore(s => s.flippingFilters.hideSinkItems);
   const [sortKey, setSortKey] = React.useState('profit');
   const [sortDir, setSortDir] = React.useState<'asc' | 'desc'>('desc');
   const processedData = React.useMemo(() => {
-    return data.map(row => {
+    const filtered = hideSinkItems ? data.filter(row => !isSinkItem(row.id)) : data;
+    return filtered.map(row => {
       const itemDetails = items[row.id];
       if (!itemDetails) return { ...row, alch: { profit: 0, roi: 0 } };
       const alch = calculateAlchProfit(itemDetails.highalch || 0, row.low, naturePrice);
       return { ...row, alch };
     });
-  }, [data, items, naturePrice]);
+  }, [data, items, naturePrice, hideSinkItems]);
   const sortedData = React.useMemo(() => {
     return [...processedData].sort((a, b) => {
       let valA, valB;
@@ -84,14 +86,17 @@ export function FlippingTable({ data }: FlippingTableProps) {
                 >
                   <TableCell className="py-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 flex items-center justify-center bg-stone-950 border border-stone-800 rounded group-hover:border-amber-500/30 transition-colors">
+                      <div className="w-8 h-8 flex items-center justify-center bg-stone-950 border border-stone-800 rounded group-hover:border-amber-500/30 transition-colors shrink-0">
                         <img
                           src={getItemIconUrl(item.name)}
                           alt=""
                           className="w-6 h-6 object-contain opacity-80 group-hover:scale-110 group-hover:opacity-100 transition-all"
                         />
                       </div>
-                      <span className="text-xs font-bold text-stone-200 truncate max-w-[120px]">{item.name}</span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold text-stone-200 truncate">{item.name}</span>
+                        {isSinkItem(row.id) && <span className="text-[8px] font-black text-amber-500 uppercase tracking-tighter">SINK ITEM</span>}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell className="text-right py-2 font-mono text-xs text-rose-400">{row.low.toLocaleString()}</TableCell>
