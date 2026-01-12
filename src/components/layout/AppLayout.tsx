@@ -2,11 +2,11 @@ import React, { useEffect } from 'react';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { useQuery } from '@tanstack/react-query';
-import { fetchItemMapping, fetchLatestPrices, fetch1hPrices, HourlyPriceData } from '@/lib/osrs-api';
+import { fetchItemMapping, fetchLatestPrices, fetch1hPrices, HourlyPriceData, getNaturePrice } from '@/lib/osrs-api';
 import { useMarketStore } from '@/store/market-store';
 import { ItemSearch } from '@/components/market/ItemSearch';
 import { ItemDetailSheet } from '@/components/market/ItemDetailSheet';
-import { Activity, Database } from 'lucide-react';
+import { Activity, Database, Zap } from 'lucide-react';
 type AppLayoutProps = {
   children: React.ReactNode;
   container?: boolean;
@@ -15,6 +15,8 @@ export function AppLayout({ children, container = false }: AppLayoutProps): JSX.
   const setItems = useMarketStore(s => s.setItems);
   const setLoading = useMarketStore(s => s.setLoading);
   const updateHourlyPrices = useMarketStore(s => s.updateHourlyPrices);
+  const setNaturePrice = useMarketStore(s => s.setNaturePrice);
+  const naturePriceValue = useMarketStore(s => s.naturePrice);
   const itemsCount = useMarketStore(s => s.itemIds.length);
   const { data: itemMappingData } = useQuery({
     queryKey: ['itemMapping'],
@@ -32,6 +34,12 @@ export function AppLayout({ children, container = false }: AppLayoutProps): JSX.
     queryFn: fetchLatestPrices,
     refetchInterval: 30000,
   });
+  useEffect(() => {
+    if (latestPrices) {
+      const price = getNaturePrice(latestPrices);
+      setNaturePrice(price);
+    }
+  }, [latestPrices, setNaturePrice]);
   const { data: hourlyData } = useQuery({
     queryKey: ['1hPrices'],
     queryFn: fetch1hPrices,
@@ -57,6 +65,10 @@ export function AppLayout({ children, container = false }: AppLayoutProps): JSX.
             <ItemSearch />
           </div>
           <div className="flex items-center gap-4 text-[10px] font-mono">
+            <div className="flex items-center gap-1.5 text-amber-500">
+               <Zap className="w-3 h-3" />
+               NATURE: {naturePriceValue > 0 ? `${naturePriceValue} GP` : '...'}
+            </div>
             <div className="flex items-center gap-1.5 text-emerald-500">
               <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
               LIVE
@@ -77,7 +89,7 @@ export function AppLayout({ children, container = false }: AppLayoutProps): JSX.
               <Activity className="w-3 h-3" /> POLLING: 30S
             </span>
           </div>
-          <div>OSRS REAL-TIME TERMINAL v1.0.2</div>
+          <div>OSRS REAL-TIME TERMINAL v1.0.5</div>
         </footer>
         <ItemDetailSheet prices={latestPrices || {}} />
       </SidebarInset>

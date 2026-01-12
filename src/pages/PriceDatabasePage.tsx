@@ -53,9 +53,10 @@ export function PriceDatabasePage() {
             <TableRow className="border-stone-800 hover:bg-transparent">
               <TableHead className="w-10"></TableHead>
               <TableHead className="text-[10px] uppercase font-bold text-stone-500">Item</TableHead>
-              <TableHead className="text-[10px] uppercase font-bold text-stone-500 text-right">Buy Limit</TableHead>
+              <TableHead className="text-[10px] uppercase font-bold text-stone-500 text-right">Limit</TableHead>
               <TableHead className="text-[10px] uppercase font-bold text-stone-500 text-right">High Price</TableHead>
-              <TableHead className="text-[10px] uppercase font-bold text-stone-500 text-right">Low Price</TableHead>
+              <TableHead className="text-[10px] uppercase font-bold text-stone-500 text-right text-amber-500/80">High Alch</TableHead>
+              <TableHead className="text-[10px] uppercase font-bold text-stone-500 text-right text-stone-500">Low Alch</TableHead>
               <TableHead className="text-[10px] uppercase font-bold text-stone-500 text-center">Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -92,8 +93,11 @@ export function PriceDatabasePage() {
                   <TableCell className="text-right font-mono text-xs text-emerald-400">
                     {price?.high && price.high > 0 ? price.high.toLocaleString() : '—'}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-xs text-rose-400">
-                    {price?.low && price.low > 0 ? price.low.toLocaleString() : '—'}
+                  <TableCell className="text-right font-mono text-xs text-amber-500/90 bg-amber-500/5">
+                    {item.highalch ? item.highalch.toLocaleString() : 'N/A'}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-xs text-stone-500">
+                    {item.lowalch ? item.lowalch.toLocaleString() : 'N/A'}
                   </TableCell>
                   <TableCell className="text-center">
                     {item.members && <Badge variant="outline" className="text-[9px] border-amber-900/50 text-amber-600 px-1 py-0 h-4 uppercase">M</Badge>}

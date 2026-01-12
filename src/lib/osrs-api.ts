@@ -38,6 +38,7 @@ export interface TimeSeriesPoint {
 export interface TimeSeriesResponse {
   data: TimeSeriesPoint[];
 }
+export const NATURE_RUNE_ID = 561;
 const BASE_URL = 'https://prices.runescape.wiki/api/v1/osrs';
 const USER_AGENT = 'RuneTerminal - Market Analytics Tool';
 export async function fetchItemMapping(): Promise<ItemMapping[]> {
@@ -77,4 +78,12 @@ export function calculateMargin(high: number, low: number) {
   const profit = high - low - cappedTax;
   const roi = low > 0 ? (profit / low) * 100 : 0;
   return { profit, tax: cappedTax, roi };
+}
+export function getNaturePrice(latestPrices: Record<string, LatestPrice>): number {
+  return latestPrices[NATURE_RUNE_ID.toString()]?.low || 0;
+}
+export function calculateAlchProfit(highAlch: number, buyPrice: number, naturePrice: number) {
+  const profit = highAlch - buyPrice - naturePrice;
+  const roi = buyPrice > 0 ? (profit / (buyPrice + naturePrice)) * 100 : 0;
+  return { profit, roi, natureCost: naturePrice };
 }
