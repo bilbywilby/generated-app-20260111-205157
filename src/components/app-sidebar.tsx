@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, Zap, Database, Terminal, TrendingUp, Activity } from "lucide-react";
+import { Home, Zap, Database, Terminal, Star, Activity } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -17,9 +17,24 @@ import { cn } from "@/lib/utils";
 export function AppSidebar(): JSX.Element {
   const location = useLocation();
   const latest1hPrices = useMarketStore(s => s.latest1hPrices);
-  const activeTrades = React.useMemo(() => 
+  const previous1hPrices = useMarketStore(s => s.previous1hPrices);
+  const watchlist = useMarketStore(s => s.watchlist);
+  const activeTrades = React.useMemo(() =>
     Object.values(latest1hPrices).filter(d => (d.highPriceVolume + d.lowPriceVolume) > 0).length
   , [latest1hPrices]);
+  const marketSentiment = React.useMemo(() => {
+    let gainers = 0;
+    let losers = 0;
+    Object.entries(latest1hPrices).forEach(([id, curr]) => {
+      const prev = previous1hPrices[parseInt(id)];
+      if (prev?.avgHighPrice && curr?.avgHighPrice) {
+        if (curr.avgHighPrice > prev.avgHighPrice) gainers++;
+        else if (curr.avgHighPrice < prev.avgHighPrice) losers++;
+      }
+    });
+    const total = gainers + losers;
+    return total > 0 ? (gainers / total) * 100 : 50;
+  }, [latest1hPrices, previous1hPrices]);
   return (
     <Sidebar className="border-r border-stone-800 bg-[#0c0a09]">
       <SidebarHeader className="h-14 border-b border-stone-800 flex flex-row items-center px-4 gap-3">
@@ -52,7 +67,7 @@ export function AppSidebar(): JSX.Element {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={location.pathname === "/items"} className="h-9">
-                <Link to="/">
+                <Link to="/items">
                   <Database className="w-4 h-4" />
                   <span className="text-xs font-medium">Price Database</span>
                 </Link>
@@ -66,15 +81,27 @@ export function AppSidebar(): JSX.Element {
             <div className="space-y-1">
               <div className="flex justify-between text-[10px] font-mono">
                 <span className="text-stone-500 uppercase">Sentiment</span>
-                <span className="text-emerald-500">BULLISH</span>
+                <span className={cn(marketSentiment > 50 ? "text-emerald-500" : "text-rose-500")}>
+                  {marketSentiment > 55 ? "BULLISH" : marketSentiment < 45 ? "BEARISH" : "NEUTRAL"}
+                </span>
               </div>
               <div className="h-1 w-full bg-stone-800 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 w-[65%]" />
+                <div 
+                  className={cn("h-full transition-all duration-1000", marketSentiment > 50 ? "bg-emerald-500" : "bg-rose-500")} 
+                  style={{ width: `${marketSentiment}%` }} 
+                />
               </div>
             </div>
             <div className="flex items-center justify-between text-[10px] font-mono">
               <span className="text-stone-500 uppercase">Active Trades</span>
               <span className="text-white">{activeTrades.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-stone-500 uppercase">Watchlist</span>
+              <div className="flex items-center gap-1.5">
+                <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                <span className="text-white">{watchlist.length}</span>
+              </div>
             </div>
           </div>
         </SidebarGroup>

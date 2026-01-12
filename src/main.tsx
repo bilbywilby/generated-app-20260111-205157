@@ -13,6 +13,7 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import '@/index.css'
 import { HomePage } from '@/pages/HomePage';
 import { FlippingPage } from '@/pages/FlippingPage';
+import { PriceDatabasePage } from '@/pages/PriceDatabasePage';
 import { AppLayout } from '@/components/layout/AppLayout';
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
@@ -24,6 +25,11 @@ const router = createBrowserRouter([
   {
     path: "/flipping",
     element: <AppLayout container><FlippingPage /></AppLayout>,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/items",
+    element: <AppLayout container><PriceDatabasePage /></AppLayout>,
     errorElement: <RouteErrorBoundary />,
   }
 ]);
