@@ -6,13 +6,17 @@ import { MarketTicker } from '@/components/market/MarketTicker';
 import { TrendCard } from '@/components/market/TrendCard';
 import { formatGP } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   TrendingUp,
   TrendingDown,
   BarChart3,
   Zap,
   Star,
-  Plus
+  Plus,
+  ShieldCheck,
+  Cpu,
+  RefreshCw
 } from 'lucide-react';
 export function HomePage() {
   const navigate = useNavigate();
@@ -24,7 +28,7 @@ export function HomePage() {
   useEffect(() => {
     fetchWatchlist();
   }, [fetchWatchlist]);
-  const { data: latestPrices } = useQuery({
+  const { data: latestPrices, isLoading: pricesLoading } = useQuery({
     queryKey: ['latestPrices'],
     queryFn: fetchLatestPrices,
     refetchInterval: 30000,
@@ -108,98 +112,81 @@ export function HomePage() {
       <MarketTicker prices={latestPrices || {}} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="p-4 bg-stone-900 border border-stone-800 rounded-lg">
-            <p className="text-[10px] text-stone-500 uppercase font-bold tracking-wider mb-1">Market Volume (1h)</p>
-            <p className="text-xl font-mono font-bold text-white">{formatGP(marketStats.totalVolume)} gp</p>
-          </div>
-          <div className="p-4 bg-stone-900 border border-stone-800 rounded-lg">
-            <p className="text-[10px] text-stone-500 uppercase font-bold tracking-wider mb-1">Active Item Trades</p>
-            <p className="text-xl font-mono font-bold text-white">{marketStats.activeItems.toLocaleString()}</p>
-          </div>
-          <div className="p-4 bg-stone-900 border border-stone-800 rounded-lg">
-            <p className="text-[10px] text-stone-500 uppercase font-bold tracking-wider mb-1">Watchlist Items</p>
-            <p className="text-xl font-mono font-bold text-amber-500">{watchlist.length}</p>
-          </div>
-          <div className="p-4 bg-stone-900 border border-stone-800 rounded-lg">
-            <p className="text-[10px] text-stone-500 uppercase font-bold tracking-wider mb-1">Terminal Status</p>
-            <div className="flex items-center gap-2">
-               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-               <span className="text-xs font-mono text-emerald-500">NOMINAL</span>
-            </div>
-          </div>
+          {[
+            { label: 'Market Volume (1h)', value: formatGP(marketStats.totalVolume), color: 'text-white' },
+            { label: 'Active Trade Pairs', value: marketStats.activeItems.toLocaleString(), color: 'text-white' },
+            { label: 'Watchlist Items', value: watchlist.length, color: 'text-amber-500' },
+            { label: 'System Uptime', value: '99.99%', color: 'text-emerald-500', isStatus: true }
+          ].map((stat, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="p-4 bg-stone-900 border border-stone-800 rounded-lg shadow-inner shadow-black/20"
+            >
+              <p className="text-[10px] text-stone-500 uppercase font-bold tracking-widest mb-1">{stat.label}</p>
+              {stat.isStatus ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <p className="text-xl font-mono font-bold text-emerald-500">STABLE</p>
+                </div>
+              ) : (
+                <p className={`text-xl font-mono font-bold ${stat.color}`}>{stat.value}</p>
+              )}
+            </motion.div>
+          ))}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <TrendCard
-            title="My Watchlist"
-            icon={<Star className="w-4 h-4 text-amber-500" />}
-            items={watchlistItems}
-            onSelect={setSelectedItemId}
-          />
-          <TrendCard
-            title="Top Gainers"
-            icon={<TrendingUp className="w-4 h-4 text-emerald-500" />}
-            items={topGainers}
-            onSelect={setSelectedItemId}
-          />
-          <TrendCard
-            title="Top Losers"
-            icon={<TrendingDown className="w-4 h-4 text-rose-500" />}
-            items={topLosers}
-            onSelect={setSelectedItemId}
-          />
-          <TrendCard
-            title="High Volume"
-            icon={<BarChart3 className="w-4 h-4 text-amber-500" />}
-            items={highVolume}
-            onSelect={setSelectedItemId}
-          />
+          <TrendCard title="My Watchlist" icon={<Star className="w-4 h-4 text-amber-500" />} items={watchlistItems} onSelect={setSelectedItemId} />
+          <TrendCard title="Top Gainers" icon={<TrendingUp className="w-4 h-4 text-emerald-500" />} items={topGainers} onSelect={setSelectedItemId} />
+          <TrendCard title="Top Losers" icon={<TrendingDown className="w-4 h-4 text-rose-500" />} items={topLosers} onSelect={setSelectedItemId} />
+          <TrendCard title="High Volume" icon={<BarChart3 className="w-4 h-4 text-amber-500" />} items={highVolume} onSelect={setSelectedItemId} />
         </div>
-        {watchlist.length === 0 && (
-          <div className="mt-6 p-6 border border-dashed border-stone-800 rounded-xl bg-stone-900/10 flex flex-col items-center justify-center text-center space-y-3">
-             <div className="w-10 h-10 rounded-full bg-stone-900 flex items-center justify-center border border-stone-800">
-               <Plus className="w-5 h-5 text-stone-500" />
-             </div>
-             <div>
-               <p className="text-sm font-bold text-stone-300">Your Watchlist is Empty</p>
-               <p className="text-xs text-stone-500">Track specific items to see them in your terminal dashboard.</p>
-             </div>
-             <button 
-               onClick={() => navigate('/items')}
-               className="text-[10px] font-bold uppercase tracking-wider text-amber-500 hover:text-amber-400"
-             >
-               Go to Database
-             </button>
+        <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-stone-900 border border-stone-800 rounded-xl p-8 relative overflow-hidden flex flex-col items-center justify-center text-center space-y-6">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+            <Zap className="w-16 h-16 text-amber-500 opacity-20 floating" />
+            <div className="max-w-md space-y-2">
+              <h3 className="text-2xl font-bold text-white tracking-tight">Tactical Flipping Engine</h3>
+              <p className="text-stone-500 text-sm leading-relaxed">
+                Aggregating real-time pricing data to identify high-ROI trade opportunities. 
+                Factoring in the 1% Grand Exchange tax automatically for true net profit analysis.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/flipping')}
+              className="px-8 py-3 bg-amber-500 text-black text-sm font-black rounded-lg hover:bg-amber-400 transition-all active:scale-95 shadow-lg shadow-amber-500/20 uppercase tracking-widest"
+            >
+              LAUNCH ENGINE
+            </button>
           </div>
-        )}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-           <div className="bg-stone-900 border border-stone-800 rounded-lg p-6 min-h-[250px] flex flex-col justify-center items-center text-center space-y-4">
-              <Zap className="w-12 h-12 text-amber-500 opacity-20" />
-              <div>
-                <h3 className="text-lg font-bold text-white">Tactical Flipping Tool</h3>
-                <p className="text-stone-500 max-w-sm text-sm">Real-time margin analysis factoring in the 1% GE tax. Find the most profitable trades instantly.</p>
+          <div className="bg-stone-900 border border-stone-800 rounded-xl overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-stone-800 bg-stone-950/50 flex items-center justify-between">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-stone-400 flex items-center gap-2">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> Terminal Logs
+              </h3>
+              <RefreshCw className={`w-3 h-3 text-stone-600 ${pricesLoading ? 'animate-spin' : ''}`} />
+            </div>
+            <div className="p-6 space-y-5 font-mono">
+              <div className="space-y-1">
+                <p className="text-[10px] text-emerald-500">[SYSTEM] SESSION_INIT_OK</p>
+                <p className="text-xs text-stone-300">Terminal linked to OSRS Real-time API.</p>
               </div>
-              <button
-                onClick={() => navigate('/flipping')}
-                className="px-6 py-2 bg-amber-500 text-black text-sm font-bold rounded-md hover:bg-amber-400 transition-colors"
-              >
-                OPEN FLIPPING ENGINE
-              </button>
-           </div>
-           <div className="bg-stone-900 border border-stone-800 rounded-lg p-6">
-              <div className="flex items-center justify-between mb-6">
-                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-stone-500">Terminal Notifications</h3>
+              <div className="space-y-1">
+                <p className="text-[10px] text-amber-500">[MARKET] DATA_SYNC_COMPLETE</p>
+                <p className="text-xs text-stone-300">Tracking {marketStats.activeItems} active item pairs.</p>
               </div>
-              <div className="space-y-4">
-                 <div className="border-l border-amber-500 pl-4 py-1">
-                    <p className="text-xs text-stone-500 mb-0.5">Watchlist Synced</p>
-                    <p className="text-sm font-medium">Terminal state persists across sessions using Cloudflare DO.</p>
-                 </div>
-                 <div className="border-l border-stone-800 pl-4 py-1">
-                    <p className="text-xs text-stone-500 mb-0.5">Market Index</p>
-                    <p className="text-sm font-medium">Tracking {Object.keys(latest1hPrices).length} active market pairs.</p>
-                 </div>
+              <div className="space-y-1">
+                <p className="text-[10px] text-stone-500">[CLIENT] WATCHLIST_LOADED</p>
+                <p className="text-xs text-stone-300">{watchlist.length} items synced from persistent store.</p>
               </div>
-           </div>
+              <div className="pt-4 border-t border-stone-800/50 flex flex-col items-center gap-2">
+                 <Cpu className="w-6 h-6 text-stone-800" />
+                 <span className="text-[9px] text-stone-600 uppercase tracking-widest">RUNE-X-CORE v1.0.5</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
