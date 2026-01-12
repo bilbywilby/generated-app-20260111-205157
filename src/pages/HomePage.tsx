@@ -4,7 +4,7 @@ import { fetchLatestPrices } from '@/lib/osrs-api';
 import { useMarketStore } from '@/store/market-store';
 import { MarketTicker } from '@/components/market/MarketTicker';
 import { TrendCard } from '@/components/market/TrendCard';
-import { formatGP } from '@/lib/utils';
+import { formatGP, calculateIndexPerformance, cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -14,15 +14,12 @@ import {
   BarChart3,
   Zap,
   Star,
-  Plus,
   ShieldCheck,
   Cpu,
   RefreshCw
 } from 'lucide-react';
 import { MARKET_BASKETS, BasketCategory } from '@/lib/indices';
-import { calculateIndexPerformance, cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
-
 export function HomePage() {
   const navigate = useNavigate();
   const latest1hPrices = useMarketStore(s => s.latest1hPrices);
@@ -88,7 +85,7 @@ export function HomePage() {
         id: item.id,
         value: `${item.change.toFixed(1)}%`,
         subValue: `${formatGP(item.price)} gp`,
-        isPositive: item.change >= 0
+        isPositive: item.change < 0 ? false : item.change > 0 ? true : undefined
       }));
   }, [latest1hPrices, previous1hPrices]);
   const highVolume = React.useMemo(() => {
@@ -123,7 +120,7 @@ export function HomePage() {
             { label: 'Watchlist Items', value: watchlist.length, color: 'text-amber-500' },
             { label: 'System Uptime', value: '99.99%', color: 'text-emerald-500', isStatus: true }
           ].map((stat, i) => (
-            <motion.div 
+            <motion.div
               key={i}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -134,7 +131,7 @@ export function HomePage() {
               {stat.isStatus ? (
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <p className="text-xl font-mono font-bold text-emerald-500">STABLE</p>
+                  <p className="text-xl font-mono font-bold text-emerald-500 uppercase">Live</p>
                 </div>
               ) : (
                 <p className={`text-xl font-mono font-bold ${stat.color}`}>{stat.value}</p>
@@ -142,7 +139,6 @@ export function HomePage() {
             </motion.div>
           ))}
         </div>
-
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
             <Globe className="w-4 h-4 text-stone-500" />
@@ -156,9 +152,9 @@ export function HomePage() {
                   key={cat}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ delay: i * 0.05, duration: 0.2 }}
                 >
-                  <Card className="bg-stone-900/40 border-stone-800 hover:bg-stone-800/40 transition-colors">
+                  <Card className="bg-stone-900/40 border-stone-800 hover:bg-stone-800/40 transition-colors cursor-default">
                     <CardContent className="p-3">
                       <p className="text-[9px] font-bold text-stone-500 uppercase mb-1">{cat}</p>
                       <p className={cn(
@@ -174,7 +170,6 @@ export function HomePage() {
             })}
           </div>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <TrendCard title="My Watchlist" icon={<Star className="w-4 h-4 text-amber-500" />} items={watchlistItems} onSelect={setSelectedItemId} />
           <TrendCard title="Top Gainers" icon={<TrendingUp className="w-4 h-4 text-emerald-500" />} items={topGainers} onSelect={setSelectedItemId} />
@@ -184,12 +179,12 @@ export function HomePage() {
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-stone-900 border border-stone-800 rounded-xl p-8 relative overflow-hidden flex flex-col items-center justify-center text-center space-y-6">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
-            <Zap className="w-16 h-16 text-amber-500 opacity-20 floating" />
+            <Zap className="w-16 h-16 text-amber-500 opacity-20" />
             <div className="max-w-md space-y-2">
               <h3 className="text-2xl font-bold text-white tracking-tight">Tactical Flipping Engine</h3>
               <p className="text-stone-500 text-sm leading-relaxed">
-                Aggregating real-time pricing data to identify high-ROI trade opportunities. 
-                Factoring in the 1% Grand Exchange tax automatically for true net profit analysis.
+                Aggregating real-time pricing data to identify high-ROI trade opportunities.
+                Factoring in the 2% Grand Exchange tax automatically for true net profit analysis.
               </p>
             </div>
             <button
@@ -208,16 +203,16 @@ export function HomePage() {
             </div>
             <div className="p-6 space-y-5 font-mono">
               <div className="space-y-1">
-                <p className="text-[10px] text-emerald-500">[SYSTEM] SESSION_INIT_OK</p>
-                <p className="text-xs text-stone-300">Terminal linked to OSRS Real-time API.</p>
+                <p className="text-[10px] text-emerald-500 uppercase">[System] session_ready</p>
+                <p className="text-xs text-stone-300">Terminal linked to OSRS Wiki pricing feed.</p>
               </div>
               <div className="space-y-1">
-                <p className="text-[10px] text-amber-500">[MARKET] DATA_SYNC_COMPLETE</p>
+                <p className="text-[10px] text-amber-500 uppercase">[Market] sync_ok</p>
                 <p className="text-xs text-stone-300">Tracking {marketStats.activeItems} active item pairs.</p>
               </div>
               <div className="space-y-1">
-                <p className="text-[10px] text-stone-500">[CLIENT] WATCHLIST_LOADED</p>
-                <p className="text-xs text-stone-300">{watchlist.length} items synced from persistent store.</p>
+                <p className="text-[10px] text-stone-500 uppercase">[Data] indices_init</p>
+                <p className="text-xs text-stone-300">Sectoral indices calculated from 1h trade window.</p>
               </div>
               <div className="pt-4 border-t border-stone-800/50 flex flex-col items-center gap-2">
                  <Cpu className="w-6 h-6 text-stone-800" />
