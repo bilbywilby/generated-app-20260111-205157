@@ -58,38 +58,38 @@ export function AppLayout({ children, container = false }: AppLayoutProps): JSX.
     <SidebarProvider defaultOpen={true}>
       <AppSidebar />
       <SidebarInset className="bg-[#0c0a09] flex flex-col min-h-screen">
-        <header className="sticky top-0 z-40 bg-[#0c0a09]/80 backdrop-blur-md border-b border-stone-800 h-14 flex items-center px-4 justify-between">
-          <div className="flex items-center gap-4">
-            <SidebarTrigger />
-            <div className="h-4 w-px bg-stone-800" />
+        <header className="sticky top-0 z-40 bg-[#0c0a09]/90 backdrop-blur-xl border-b border-stone-800/60 h-11 flex items-center px-4 justify-between shadow-sm shadow-amber-500/5">
+          <div className="flex items-center gap-3">
+            <SidebarTrigger className="h-7 w-7" />
+            <div className="h-3 w-px bg-stone-800" />
             <ItemSearch />
           </div>
-          <div className="flex items-center gap-4 text-[10px] font-mono">
-            <div className="flex items-center gap-1.5 text-amber-500">
+          <div className="flex items-center gap-4 font-mono text-[10px]">
+            <div className="flex items-center gap-1.5 text-amber-500 font-bold">
                <Zap className="w-3 h-3" />
                NATURE: {naturePriceValue > 0 ? `${naturePriceValue} GP` : '...'}
             </div>
-            <div className="flex items-center gap-1.5 text-emerald-500">
-              <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-              LIVE
+            <div className="flex items-center gap-1.5 text-emerald-500 font-bold uppercase tracking-tight">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 live-pulse" />
+              Live Feed
             </div>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto">
-          <div className={container ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10" : ""}>
+          <div className={container ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8" : ""}>
             {children}
           </div>
         </main>
-        <footer className="h-8 border-t border-stone-800 bg-stone-950 flex items-center justify-between px-4 text-[10px] font-mono text-stone-500">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1">
-              <Database className="w-3 h-3" /> {itemsCount.toLocaleString()} ITEMS TRACKED
+        <footer className="h-7 border-t border-stone-800/60 bg-stone-950 flex items-center justify-between px-4 text-[9px] font-mono text-stone-500 uppercase tracking-widest shadow-inner shadow-amber-500/[0.02]">
+          <div className="flex items-center gap-5">
+            <span className="flex items-center gap-1.5">
+              <Database className="w-2.5 h-2.5" /> {itemsCount.toLocaleString()} SECS
             </span>
-            <span className="flex items-center gap-1">
-              <Activity className="w-3 h-3" /> POLLING: 30S
+            <span className="flex items-center gap-1.5">
+              <Activity className="w-2.5 h-2.5" /> 30S POLLING
             </span>
           </div>
-          <div>OSRS REAL-TIME TERMINAL v1.0.5</div>
+          <div className="opacity-60">RUNE-TERMINAL CORE v1.0.9-STABLE</div>
         </footer>
         <ItemDetailSheet prices={latestPrices || {}} />
       </SidebarInset>
