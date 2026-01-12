@@ -16,6 +16,7 @@ interface MarketState {
   previous1hPrices: Record<number, HourlyPriceData>;
   flippingFilters: FlippingFilters;
   watchlist: number[];
+  naturePrice: number;
   setItems: (items: ItemMapping[]) => void;
   setLoading: (loading: boolean) => void;
   setSelectedItemId: (id: number | null) => void;
@@ -23,6 +24,7 @@ interface MarketState {
   setFlippingFilters: (filters: Partial<FlippingFilters>) => void;
   fetchWatchlist: () => Promise<void>;
   toggleWatchlist: (itemId: number) => Promise<void>;
+  setNaturePrice: (price: number) => void;
 }
 export const useMarketStore = create<MarketState>((set, get) => ({
   items: {},
@@ -38,6 +40,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     membersOnly: false,
   },
   watchlist: [],
+  naturePrice: 0,
   setItems: (itemsList) => {
     const itemMap = itemsList.reduce((acc, item) => {
       acc[item.id] = item;
@@ -68,7 +71,6 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     }
   },
   toggleWatchlist: async (itemId) => {
-    // Optimistic update
     const current = get().watchlist;
     const exists = current.includes(itemId);
     const next = exists ? current.filter(id => id !== itemId) : [...current, itemId];
@@ -85,8 +87,8 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to toggle watchlist item', error);
-      // Revert on error
       set({ watchlist: current });
     }
   },
+  setNaturePrice: (naturePrice) => set({ naturePrice }),
 }));

@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useMarketStore } from '@/store/market-store';
 import { useQuery } from '@tanstack/react-query';
-import { fetchTimeSeries, calculateMargin } from '@/lib/osrs-api';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { fetchTimeSeries, calculateMargin, calculateAlchProfit } from '@/lib/osrs-api';
+import { AreaChart, Area, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Info, Star, Clock } from 'lucide-react';
+import { Info, Star, Clock, Wand2 } from 'lucide-react';
 import { cn, getItemIconUrl } from '@/lib/utils';
 import { format } from 'date-fns';
 export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
@@ -16,6 +16,8 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
   const items = useMarketStore(s => s.items);
   const watchlist = useMarketStore(s => s.watchlist);
   const toggleWatchlist = useMarketStore(s => s.toggleWatchlist);
+  const naturePrice = useMarketStore(s => s.naturePrice);
+  const latest1hPrices = useMarketStore(s => s.latest1hPrices);
   const [timeframe, setTimeframe] = useState<'5m' | '1h' | '6h'>('1h');
   const item = selectedId ? items[selectedId] : null;
   const currentPrice = selectedId ? prices[selectedId.toString()] : null;
@@ -29,6 +31,15 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
     if (!currentPrice) return null;
     return calculateMargin(currentPrice.high, currentPrice.low);
   }, [currentPrice]);
+  const alchAnalysis = React.useMemo(() => {
+    if (!item || !currentPrice || !item.highalch) return null;
+    const stats = calculateAlchProfit(item.highalch, currentPrice.low, naturePrice);
+    const hourlyVol = selectedId ? (latest1hPrices[selectedId]?.highPriceVolume || 0) + (latest1hPrices[selectedId]?.lowPriceVolume || 0) : 0;
+    const dailyVolume = hourlyVol * 24;
+    const maxDailyQty = Math.min(item.limit || Infinity, dailyVolume);
+    const maxDailyProfit = stats.profit * maxDailyQty;
+    return { ...stats, maxDailyProfit, maxDailyQty };
+  }, [item, currentPrice, naturePrice, selectedId, latest1hPrices]);
   if (!item) return null;
   return (
     <Sheet open={!!selectedId} onOpenChange={(open) => !open && setSelectedId(null)}>
@@ -37,11 +48,7 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
               <div className="p-4 bg-stone-900 border border-stone-800 rounded-xl shadow-inner shadow-black/40">
-                <img
-                  src={getItemIconUrl(item.name)}
-                  alt={item.name}
-                  className="w-12 h-12 object-contain"
-                />
+                <img src={getItemIconUrl(item.name)} alt={item.name} className="w-12 h-12 object-contain" />
               </div>
               <div>
                 <SheetTitle className="text-2xl font-bold text-stone-100">{item.name}</SheetTitle>
@@ -80,27 +87,71 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
           </div>
         </div>
         {margin && (
-          <div className="mt-4 p-4 bg-amber-900/10 border border-amber-900/20 rounded-lg">
+          <div className="mt-4 p-4 bg-stone-900/30 border border-stone-800 rounded-lg">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-amber-500 flex items-center gap-1">
-                <Info className="w-4 h-4" /> Flipping Intelligence
+              <span className="text-xs font-bold text-stone-400 uppercase tracking-wider flex items-center gap-1">
+                <Info className="w-3 h-3" /> Flipping Intelligence
               </span>
-              <span className="text-xs text-amber-600">Incl. 1% GE Tax</span>
+              <span className="text-[10px] text-stone-600 italic">Incl. 1% Tax</span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div>
-                <p className="text-[10px] uppercase text-stone-500">Net Profit</p>
-                <p className="font-mono font-bold text-emerald-400">{margin.profit.toLocaleString()} gp</p>
+                <p className="text-[10px] uppercase text-stone-600">Net Profit</p>
+                <p className="font-mono font-bold text-emerald-400 text-sm">{margin.profit.toLocaleString()} gp</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-stone-500">Tax</p>
-                <p className="font-mono font-bold text-stone-400">-{margin.tax.toLocaleString()} gp</p>
+                <p className="text-[10px] uppercase text-stone-600">Tax</p>
+                <p className="font-mono font-bold text-stone-500 text-sm">-{margin.tax.toLocaleString()} gp</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-stone-500">ROI</p>
-                <p className="font-mono font-bold text-emerald-400">{margin.roi.toFixed(2)}%</p>
+                <p className="text-[10px] uppercase text-stone-600">ROI</p>
+                <p className="font-mono font-bold text-emerald-400 text-sm">{margin.roi.toFixed(2)}%</p>
               </div>
             </div>
+          </div>
+        )}
+        {alchAnalysis ? (
+          <div className="mt-4 p-4 bg-amber-950/10 border border-amber-900/20 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-amber-500 uppercase tracking-wider flex items-center gap-1">
+                <Wand2 className="w-3 h-3" /> Magic & Alchemy
+              </span>
+              <span className="text-[10px] text-amber-700">Cost: 1 Nature (~{naturePrice} gp)</span>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+               <div className="flex justify-between items-center bg-stone-950/40 p-2 rounded">
+                 <span className="text-[10px] text-stone-500 uppercase">High Alch</span>
+                 <span className="font-mono text-sm text-amber-500 font-bold">{item.highalch?.toLocaleString()}</span>
+               </div>
+               <div className="flex justify-between items-center bg-stone-950/40 p-2 rounded">
+                 <span className="text-[10px] text-stone-500 uppercase">Low Alch</span>
+                 <span className="font-mono text-sm text-stone-400">{item.lowalch?.toLocaleString()}</span>
+               </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <p className="text-[10px] uppercase text-stone-600">Alch Profit</p>
+                <p className={cn("font-mono font-bold text-sm", alchAnalysis.profit > 0 ? "text-emerald-400" : "text-rose-400")}>
+                  {alchAnalysis.profit.toLocaleString()} gp
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase text-stone-600">Alch ROI</p>
+                <p className={cn("font-mono font-bold text-sm", alchAnalysis.roi > 0 ? "text-emerald-400" : "text-rose-400")}>
+                  {alchAnalysis.roi.toFixed(1)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase text-stone-600">Max Daily</p>
+                <p className="font-mono font-bold text-amber-500 text-sm">
+                  {alchAnalysis.maxDailyProfit > 0 ? `${(alchAnalysis.maxDailyProfit/1000).toFixed(0)}k` : '0'} gp
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-4 p-4 bg-stone-900/20 border border-dashed border-stone-800 rounded-lg text-center">
+             <p className="text-[10px] text-stone-600 uppercase font-bold">Non-alchemizable Item</p>
           </div>
         )}
         <Separator className="my-8 bg-stone-800" />
@@ -128,29 +179,19 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
-                  <XAxis
-                    dataKey="timestamp"
-                    hide
-                  />
+                  <XAxis dataKey="timestamp" hide />
                   <YAxis
                     domain={['auto', 'auto']}
                     orientation="right"
                     tick={{ fontSize: 10, fill: '#57534e' }}
                     tickFormatter={(val) => val >= 1000000 ? `${(val/1000000).toFixed(1)}M` : val >= 1000 ? `${(val/1000).toFixed(0)}k` : val}
                   />
-                  <Tooltip
+                  <ChartTooltip
                     contentStyle={{ backgroundColor: '#1c1917', border: '1px solid #444', fontSize: '12px' }}
                     labelStyle={{ display: 'none' }}
                     formatter={(value: any) => [`${value.toLocaleString()} gp`, 'Price']}
                   />
-                  <Area
-                    type="monotone"
-                    dataKey="avgHighPrice"
-                    stroke="#f59e0b"
-                    fillOpacity={1}
-                    fill="url(#colorPrice)"
-                    strokeWidth={2}
-                  />
+                  <Area type="monotone" dataKey="avgHighPrice" stroke="#f59e0b" fillOpacity={1} fill="url(#colorPrice)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             )}
