@@ -18,6 +18,16 @@ export interface LatestPrice {
 export interface LatestPricesResponse {
   data: Record<string, LatestPrice>;
 }
+export interface HourlyPriceData {
+  avgHighPrice: number | null;
+  avgLowPrice: number | null;
+  highPriceVolume: number;
+  lowPriceVolume: number;
+  timestamp: number;
+}
+export interface HourlyPricesResponse {
+  data: Record<string, HourlyPriceData>;
+}
 export interface TimeSeriesPoint {
   timestamp: number;
   avgHighPrice: number;
@@ -43,6 +53,14 @@ export async function fetchLatestPrices(): Promise<Record<string, LatestPrice>> 
   });
   if (!response.ok) throw new Error('Failed to fetch latest prices');
   const json: LatestPricesResponse = await response.json();
+  return json.data;
+}
+export async function fetch1hPrices(): Promise<Record<string, HourlyPriceData>> {
+  const response = await fetch(`${BASE_URL}/1h`, {
+    headers: { 'User-Agent': USER_AGENT }
+  });
+  if (!response.ok) throw new Error('Failed to fetch 1h prices');
+  const json: HourlyPricesResponse = await response.json();
   return json.data;
 }
 export async function fetchTimeSeries(id: number, timestep: '5m' | '1h' | '6h' = '1h'): Promise<TimeSeriesPoint[]> {

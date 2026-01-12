@@ -16,15 +16,19 @@ interface TrendCardProps {
 }
 export function TrendCard({ title, icon, items, onSelect }: TrendCardProps) {
   const marketItems = useMarketStore(s => s.items);
+  const getWikiIcon = (name: string) => {
+    const formattedName = name.replace(/ /g, '_');
+    return `https://static.runescape.wiki/images/${formattedName}_detail.png`;
+  };
   return (
-    <Card className="bg-stone-900/50 border-stone-800 shadow-xl">
-      <CardHeader className="flex flex-row items-center justify-between py-3 px-4 space-y-0">
-        <CardTitle className="text-sm font-medium text-stone-200 flex items-center gap-2">
+    <Card className="bg-stone-900/40 border-stone-800 shadow-xl overflow-hidden group/card">
+      <CardHeader className="flex flex-row items-center justify-between py-3 px-4 space-y-0 border-b border-stone-800/50">
+        <CardTitle className="text-xs font-bold uppercase tracking-widest text-stone-400 flex items-center gap-2">
           {icon} {title}
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-2 pb-2">
-        <div className="space-y-1">
+      <CardContent className="p-0">
+        <div className="divide-y divide-stone-800/30">
           {items.map((item) => {
             const detail = marketItems[item.id];
             if (!detail) return null;
@@ -32,31 +36,42 @@ export function TrendCard({ title, icon, items, onSelect }: TrendCardProps) {
               <button
                 key={item.id}
                 onClick={() => onSelect(item.id)}
-                className="w-full flex items-center justify-between p-2 hover:bg-stone-800/50 rounded-md transition-colors group"
+                className="w-full flex items-center justify-between p-3 hover:bg-stone-800/50 transition-all group relative overflow-hidden active:bg-stone-800"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 flex items-center justify-center bg-stone-800 rounded group-hover:bg-stone-700 transition-colors">
-                    <img 
-                      src={`https://static.runescape.wiki/images/${detail.name.replace(/ /g, '_')}_detail.png`} 
+                <div className="flex items-center gap-3 relative z-10">
+                  <div className="w-10 h-10 flex items-center justify-center bg-stone-950 border border-stone-800 rounded-lg group-hover:border-amber-500/30 transition-colors">
+                    <img
+                      src={getWikiIcon(detail.name)}
                       alt={detail.name}
-                      className="w-6 h-6 object-contain"
-                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                      className="w-7 h-7 object-contain drop-shadow-md group-hover:scale-110 transition-transform"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.opacity = '0.3';
+                      }}
                     />
                   </div>
                   <div className="text-left">
-                    <p className="text-xs font-medium text-stone-300 truncate w-32">{detail.name}</p>
-                    {item.subValue && <p className="text-[10px] text-stone-500">{item.subValue}</p>}
+                    <p className="text-xs font-bold text-stone-200 truncate w-32 group-hover:text-white transition-colors">
+                      {detail.name}
+                    </p>
+                    {item.subValue && (
+                      <p className="text-[10px] font-mono text-stone-500 group-hover:text-stone-400">
+                        {item.subValue}
+                      </p>
+                    )}
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right relative z-10">
                   <p className={cn(
-                    "text-xs font-mono font-bold",
-                    item.isPositive === true ? "text-emerald-500" : 
-                    item.isPositive === false ? "text-rose-500" : "text-amber-500"
+                    "text-xs font-mono font-bold px-2 py-0.5 rounded",
+                    item.isPositive === true ? "text-emerald-400 bg-emerald-500/5" :
+                    item.isPositive === false ? "text-rose-400 bg-rose-500/5" : "text-amber-400 bg-amber-500/5"
                   )}>
                     {typeof item.value === 'number' ? `${item.value.toLocaleString()}` : item.value}
                   </p>
                 </div>
+                {/* Subtle highlight effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-stone-800/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
               </button>
             );
           })}
