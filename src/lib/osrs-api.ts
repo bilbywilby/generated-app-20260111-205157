@@ -73,7 +73,8 @@ export async function fetchTimeSeries(id: number, timestep: '5m' | '1h' | '6h' =
   return json.data;
 }
 export function calculateMargin(high: number, low: number) {
-  const tax = Math.floor(high * 0.01);
+  // Updated to 2% GE Tax (December 2021 Update)
+  const tax = Math.floor(high * 0.02);
   const cappedTax = Math.min(tax, 5_000_000);
   const profit = high - low - cappedTax;
   const roi = low > 0 ? (profit / low) * 100 : 0;

@@ -6,6 +6,7 @@ interface FlippingFilters {
   minROI: number;
   minVolume: number;
   membersOnly: boolean;
+  hideSinkItems: boolean;
 }
 interface MarketState {
   items: Record<number, ItemMapping>;
@@ -38,6 +39,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     minROI: 1,
     minVolume: 10,
     membersOnly: false,
+    hideSinkItems: false,
   },
   watchlist: [],
   naturePrice: 0,

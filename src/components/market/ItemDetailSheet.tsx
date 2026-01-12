@@ -7,8 +7,8 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveConta
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Info, Star, Clock, Wand2, Hash, Copy, Check } from 'lucide-react';
-import { cn, getItemIconUrl } from '@/lib/utils';
+import { Info, Star, Clock, Wand2, Hash, Copy, Check, ShieldAlert } from 'lucide-react';
+import { cn, getItemIconUrl, isSinkItem, getSinkData } from '@/lib/utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
@@ -24,6 +24,7 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
   const item = selectedId ? items[selectedId] : null;
   const currentPrice = selectedId ? prices[selectedId.toString()] : null;
   const isWatchlisted = selectedId ? watchlist.includes(selectedId) : false;
+  const isSink = selectedId ? isSinkItem(selectedId) : false;
   const { data: history, isLoading } = useQuery({
     queryKey: ['timeseries', selectedId, timeframe],
     queryFn: () => selectedId ? fetchTimeSeries(selectedId, timeframe) : null,
@@ -108,7 +109,7 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
               <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1.5">
                 <Info className="w-3.5 h-3.5" /> Market Spread Logic
               </span>
-              <span className="text-[10px] text-emerald-800 font-mono">1% GE TAX APPLIED</span>
+              <span className="text-[10px] text-emerald-800 font-mono">2% GE TAX APPLIED</span>
             </div>
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
@@ -124,6 +125,17 @@ export function ItemDetailSheet({ prices }: { prices: Record<string, any> }) {
                 <p className="font-mono font-bold text-emerald-400">{margin.roi.toFixed(2)}%</p>
               </div>
             </div>
+          </div>
+        )}
+        {isSink && (
+          <div className="mt-4 p-5 bg-amber-500/5 border border-amber-500/10 rounded-xl">
+            <div className="flex items-center gap-2 mb-2">
+              <ShieldAlert className="w-4 h-4 text-amber-500" />
+              <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Market Stability: Item Sink Regulated</span>
+            </div>
+            <p className="text-[10px] text-stone-400 leading-relaxed">
+              This item is part of the Jagex Item Sink mechanism. A portion of the 2% GE tax collected globally is used to purchase and permanently delete these items from the economy, maintaining high-value item scarcity.
+            </p>
           </div>
         )}
         {alchAnalysis && (
