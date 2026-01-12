@@ -1,62 +1,27 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchItemMapping, fetchLatestPrices, fetch1hPrices, HourlyPriceData } from '@/lib/osrs-api';
+import { fetchLatestPrices } from '@/lib/osrs-api';
 import { useMarketStore } from '@/store/market-store';
 import { MarketTicker } from '@/components/market/MarketTicker';
 import { TrendCard } from '@/components/market/TrendCard';
-import { ItemSearch } from '@/components/market/ItemSearch';
-import { ItemDetailSheet } from '@/components/market/ItemDetailSheet';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { formatGP, calculatePercentChange } from '@/lib/utils';
+import { formatGP } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 import {
   TrendingUp,
   TrendingDown,
   BarChart3,
   Zap,
-  Terminal,
-  Activity
 } from 'lucide-react';
 export function HomePage() {
-  const setItems = useMarketStore(s => s.setItems);
-  const setLoading = useMarketStore(s => s.setLoading);
-  const setSelectedItemId = useMarketStore(s => s.setSelectedItemId);
+  const navigate = useNavigate();
   const latest1hPrices = useMarketStore(s => s.latest1hPrices);
   const previous1hPrices = useMarketStore(s => s.previous1hPrices);
-  const setLatest1hPrices = useMarketStore(s => s.setLatest1hPrices);
-  const setPrevious1hPrices = useMarketStore(s => s.setPrevious1hPrices);
-  const itemIds = useMarketStore(s => s.itemIds);
-  useQuery({
-    queryKey: ['itemMapping'],
-    queryFn: async () => {
-      const data = await fetchItemMapping();
-      setItems(data);
-      setLoading(false);
-      return data;
-    },
-    staleTime: Infinity,
-  });
+  const setSelectedItemId = useMarketStore(s => s.setSelectedItemId);
   const { data: latestPrices } = useQuery({
     queryKey: ['latestPrices'],
     queryFn: fetchLatestPrices,
     refetchInterval: 30000,
   });
-  const { data: hourlyData } = useQuery({
-    queryKey: ['1hPrices'],
-    queryFn: fetch1hPrices,
-    refetchInterval: 300000,
-  });
-  useEffect(() => {
-    if (hourlyData) {
-      const parsed: Record<number, HourlyPriceData> = {};
-      Object.entries(hourlyData).forEach(([id, data]) => {
-        parsed[parseInt(id)] = data;
-      });
-      if (Object.keys(latest1hPrices).length > 0) {
-        setPrevious1hPrices(latest1hPrices);
-      }
-      setLatest1hPrices(parsed);
-    }
-  }, [hourlyData]);
   const topGainers = React.useMemo(() => {
     return Object.entries(latest1hPrices)
       .filter(([id]) => previous1hPrices[parseInt(id)]?.avgHighPrice)
@@ -117,54 +82,27 @@ export function HomePage() {
     return { totalVolume, activeItems };
   }, [latest1hPrices]);
   return (
-    <div className="min-h-screen bg-[#0c0a09] text-stone-200 font-sans selection:bg-amber-500/30">
-      <header className="sticky top-0 z-40 bg-[#0c0a09]/80 backdrop-blur-md border-b border-stone-800">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-500 rounded flex items-center justify-center">
-              <Terminal className="text-black w-5 h-5" />
-            </div>
-            <h1 className="text-lg font-bold tracking-tight text-white">
-              RUNE<span className="text-amber-500">TERMINAL</span>
-            </h1>
-          </div>
-          <div className="flex items-center gap-6">
-            <ItemSearch />
-            <div className="h-4 w-px bg-stone-800" />
-            <div className="flex items-center gap-4 text-xs font-mono">
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-stone-400">WIKI API LIVE</span>
-              </div>
-              <Activity className="w-4 h-4 text-stone-500" />
-            </div>
-            <ThemeToggle className="static" />
-          </div>
-        </div>
-      </header>
+    <div className="flex flex-col min-h-full">
       <MarketTicker prices={latestPrices || {}} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="p-4 bg-stone-900 border border-stone-800 rounded-lg">
-            <p className="text-xs text-stone-500 uppercase font-bold tracking-wider mb-1">Market Volume (1h)</p>
+            <p className="text-[10px] text-stone-500 uppercase font-bold tracking-wider mb-1">Market Volume (1h)</p>
             <p className="text-xl font-mono font-bold text-white">{formatGP(marketStats.totalVolume)} gp</p>
           </div>
           <div className="p-4 bg-stone-900 border border-stone-800 rounded-lg">
-            <p className="text-xs text-stone-500 uppercase font-bold tracking-wider mb-1">Active Item Trades</p>
+            <p className="text-[10px] text-stone-500 uppercase font-bold tracking-wider mb-1">Active Item Trades</p>
             <p className="text-xl font-mono font-bold text-white">{marketStats.activeItems.toLocaleString()}</p>
           </div>
           <div className="p-4 bg-stone-900 border border-stone-800 rounded-lg">
-            <p className="text-xs text-stone-500 uppercase font-bold tracking-wider mb-1">Avg Index ROI</p>
+            <p className="text-[10px] text-stone-500 uppercase font-bold tracking-wider mb-1">Avg Index ROI</p>
             <p className="text-xl font-mono font-bold text-amber-500">1.42%</p>
           </div>
           <div className="p-4 bg-stone-900 border border-stone-800 rounded-lg">
-            <p className="text-xs text-stone-500 uppercase font-bold tracking-wider mb-1">Market Sentiment</p>
+            <p className="text-[10px] text-stone-500 uppercase font-bold tracking-wider mb-1">Terminal Status</p>
             <div className="flex items-center gap-2">
-               <div className="h-2 flex-1 bg-stone-800 rounded-full overflow-hidden flex">
-                  <div className="h-full bg-emerald-500" style={{ width: '60%' }} />
-                  <div className="h-full bg-rose-500" style={{ width: '40%' }} />
-               </div>
-               <span className="text-xs font-mono text-emerald-500">STABLE</span>
+               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+               <span className="text-xs font-mono text-emerald-500">NOMINAL</span>
             </div>
           </div>
         </div>
@@ -189,39 +127,36 @@ export function HomePage() {
           />
         </div>
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-           <div className="bg-stone-900 border border-stone-800 rounded-lg p-6 min-h-[300px] flex flex-col justify-center items-center text-center space-y-4">
+           <div className="bg-stone-900 border border-stone-800 rounded-lg p-6 min-h-[250px] flex flex-col justify-center items-center text-center space-y-4">
               <Zap className="w-12 h-12 text-amber-500 opacity-20" />
               <div>
-                <h3 className="text-lg font-bold text-white">Opportunity Scanner</h3>
-                <p className="text-stone-500 max-w-sm text-sm">Our algorithms are constantly scanning for tax-adjusted margins. Enable alerts to never miss a flip.</p>
+                <h3 className="text-lg font-bold text-white">Tactical Flipping Tool</h3>
+                <p className="text-stone-500 max-w-sm text-sm">Real-time margin analysis factoring in the 1% GE tax. Find the most profitable trades instantly.</p>
               </div>
-              <button className="px-6 py-2 bg-amber-500 text-black font-bold rounded-md hover:bg-amber-400 transition-colors">Coming Soon</button>
+              <button 
+                onClick={() => navigate('/flipping')}
+                className="px-6 py-2 bg-amber-500 text-black text-sm font-bold rounded-md hover:bg-amber-400 transition-colors"
+              >
+                OPEN FLIPPING ENGINE
+              </button>
            </div>
            <div className="bg-stone-900 border border-stone-800 rounded-lg p-6">
               <div className="flex items-center justify-between mb-6">
-                 <h3 className="text-sm font-bold uppercase tracking-widest text-stone-400">Market News</h3>
-                 <span className="text-[10px] bg-stone-800 px-2 py-0.5 rounded text-stone-500">STABLE</span>
+                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-stone-500">Terminal Notifications</h3>
               </div>
               <div className="space-y-4">
-                 <div className="border-l-2 border-amber-500 pl-4 py-1">
-                    <p className="text-xs text-stone-500 mb-1">Live</p>
-                    <p className="text-sm font-medium">Tracking {Object.keys(latest1hPrices).length} items across the Grand Exchange.</p>
+                 <div className="border-l border-amber-500 pl-4 py-1">
+                    <p className="text-xs text-stone-500 mb-0.5">Live Data Flow</p>
+                    <p className="text-sm font-medium">Tracking {Object.keys(latest1hPrices).length} active market pairs.</p>
                  </div>
-                 <div className="border-l-2 border-stone-800 pl-4 py-1">
-                    <p className="text-xs text-stone-500 mb-1">Update</p>
-                    <p className="text-sm font-medium">Prices are polled from the OSRS Wiki API every 30 seconds.</p>
+                 <div className="border-l border-stone-800 pl-4 py-1">
+                    <p className="text-xs text-stone-500 mb-0.5">System Update</p>
+                    <p className="text-sm font-medium">Phase 3: Tactical Engine and multi-route terminal navigation active.</p>
                  </div>
               </div>
            </div>
         </div>
-      </main>
-      <ItemDetailSheet prices={latestPrices || {}} />
-      <footer className="py-12 border-t border-stone-900 text-center">
-         <p className="text-xs text-stone-600">
-           Data provided by OSRS Wiki Real-time Prices API. <br/>
-           Old School RuneScape is a trademark of Jagex Ltd.
-         </p>
-      </footer>
+      </div>
     </div>
   );
 }

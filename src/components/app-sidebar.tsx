@@ -1,72 +1,89 @@
-/* This is a demo sidebar. **COMPULSORY** Edit this file to customize the sidebar OR remove it from appLayout OR don't use appLayout at all */
 import React from "react";
-import { Home, Layers, Compass, Star, Settings, LifeBuoy } from "lucide-react";
+import { Home, Zap, Database, Terminal, TrendingUp, Activity } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarHeader,
-  SidebarSeparator,
-  SidebarInput,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarMenuAction,
-  SidebarMenuBadge,
 } from "@/components/ui/sidebar";
-
+import { useMarketStore } from "@/store/market-store";
+import { cn } from "@/lib/utils";
 export function AppSidebar(): JSX.Element {
+  const location = useLocation();
+  const latest1hPrices = useMarketStore(s => s.latest1hPrices);
+  const activeTrades = React.useMemo(() => 
+    Object.values(latest1hPrices).filter(d => (d.highPriceVolume + d.lowPriceVolume) > 0).length
+  , [latest1hPrices]);
   return (
-    <Sidebar>
-      <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-1">
-          <div className="h-6 w-6 rounded-md bg-gradient-to-br from-indigo-500 to-purple-500" />
-          <span className="text-sm font-medium">Demo Sidebar</span>
+    <Sidebar className="border-r border-stone-800 bg-[#0c0a09]">
+      <SidebarHeader className="h-14 border-b border-stone-800 flex flex-row items-center px-4 gap-3">
+        <div className="w-7 h-7 bg-amber-500 rounded flex items-center justify-center shrink-0">
+          <Terminal className="text-black w-4 h-4" />
         </div>
-        <SidebarInput placeholder="Search" />
+        <span className="text-sm font-bold tracking-tight text-white uppercase">
+          RUNE<span className="text-amber-500">TERMINAL</span>
+        </span>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="gap-0 py-2">
         <SidebarGroup>
-          <SidebarMenu>
+          <SidebarGroupLabel className="text-[10px] font-bold text-stone-600 uppercase tracking-widest px-4 py-2">Terminal</SidebarGroupLabel>
+          <SidebarMenu className="px-2 space-y-1">
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive>
-                <a href="#"><Home /> <span>Home</span></a>
+              <SidebarMenuButton asChild isActive={location.pathname === "/"} className="h-9">
+                <Link to="/">
+                  <Home className="w-4 h-4" />
+                  <span className="text-xs font-medium">Market Dashboard</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a href="#"><Layers /> <span>Projects</span></a>
+              <SidebarMenuButton asChild isActive={location.pathname === "/flipping"} className="h-9">
+                <Link to="/flipping">
+                  <Zap className="w-4 h-4" />
+                  <span className="text-xs font-medium">Tactical Flipping</span>
+                </Link>
               </SidebarMenuButton>
-              <SidebarMenuAction>
-                <Star className="size-4" />
-              </SidebarMenuAction>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a href="#"><Compass /> <span>Explore</span></a>
+              <SidebarMenuButton asChild isActive={location.pathname === "/items"} className="h-9">
+                <Link to="/">
+                  <Database className="w-4 h-4" />
+                  <span className="text-xs font-medium">Price Database</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
-
-        <SidebarSeparator />
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Quick Links</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a href="#"><Star /> <span>Starred</span></a>
-              </SidebarMenuButton>
-              <SidebarMenuBadge>5</SidebarMenuBadge>
-            </SidebarMenuItem>
-          </SidebarMenu>
+        <SidebarGroup className="mt-4">
+          <SidebarGroupLabel className="text-[10px] font-bold text-stone-600 uppercase tracking-widest px-4 py-2">Market Vitals</SidebarGroupLabel>
+          <div className="px-4 py-2 space-y-3">
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] font-mono">
+                <span className="text-stone-500 uppercase">Sentiment</span>
+                <span className="text-emerald-500">BULLISH</span>
+              </div>
+              <div className="h-1 w-full bg-stone-800 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 w-[65%]" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-stone-500 uppercase">Active Trades</span>
+              <span className="text-white">{activeTrades.toLocaleString()}</span>
+            </div>
+          </div>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-        <div className="px-2 text-xs text-muted-foreground">A simple shadcn sidebar</div>
+      <SidebarFooter className="p-4 border-t border-stone-800">
+        <div className="flex items-center gap-2 text-[10px] text-stone-600 font-mono">
+          <Activity className="w-3 h-3 text-emerald-500" />
+          SYSTEM NOMINAL
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
