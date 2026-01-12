@@ -5,7 +5,8 @@ import { useMarketStore } from '@/store/market-store';
 import { FlippingTable } from '@/components/market/FlippingTable';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Zap, Filter, Search, ShieldOff } from 'lucide-react';
+import { Zap, ShieldOff } from 'lucide-react';
+import { isSinkItem } from '@/lib/utils';
 export function FlippingPage() {
   const itemIds = useMarketStore(s => s.itemIds);
   const items = useMarketStore(s => s.items);
@@ -38,11 +39,6 @@ export function FlippingPage() {
       .filter((x): x is NonNullable<typeof x> => x !== null)
       .sort((a, b) => b.margin.profit - a.margin.profit);
   }, [itemIds, items, latestPrices, latest1hPrices, filters]);
-
-  function isSinkItem(id: number) {
-    const SINK_IDS = [20997, 22486, 21003, 21006, 21015, 20784, 13652, 22324, 22323, 25865, 27275, 21018, 21021, 21024, 11832, 11834, 11836, 11826, 11828, 11830, 22326, 22327, 22328, 13239, 13237, 13235, 19553, 19547, 19544, 19550, 12817, 12821, 12825, 11802, 11804, 11806, 11808];
-    return SINK_IDS.includes(id);
-  }
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-stone-900/50 p-6 rounded-xl border border-stone-800">
@@ -54,8 +50,8 @@ export function FlippingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1.5">
               <Label className="text-[10px] font-bold text-stone-500 uppercase">Min Profit (gp)</Label>
-              <Input 
-                type="number" 
+              <Input
+                type="number"
                 value={filters.minProfit}
                 onChange={(e) => setFilters({ minProfit: Number(e.target.value) })}
                 className="h-8 bg-stone-950 border-stone-800 text-xs font-mono focus-visible:ring-amber-500/50"
@@ -63,8 +59,8 @@ export function FlippingPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-[10px] font-bold text-stone-500 uppercase">Min ROI (%)</Label>
-              <Input 
-                type="number" 
+              <Input
+                type="number"
                 value={filters.minROI}
                 onChange={(e) => setFilters({ minROI: Number(e.target.value) })}
                 className="h-8 bg-stone-950 border-stone-800 text-xs font-mono focus-visible:ring-amber-500/50"
@@ -72,8 +68,8 @@ export function FlippingPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-[10px] font-bold text-stone-500 uppercase">Min Volume (1h)</Label>
-              <Input 
-                type="number" 
+              <Input
+                type="number"
                 value={filters.minVolume}
                 onChange={(e) => setFilters({ minVolume: Number(e.target.value) })}
                 className="h-8 bg-stone-950 border-stone-800 text-xs font-mono focus-visible:ring-amber-500/50"

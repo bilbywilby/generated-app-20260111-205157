@@ -12,6 +12,7 @@ import { formatGP, cn, getItemIconUrl, isSinkItem } from '@/lib/utils';
 import { calculateAlchProfit } from '@/lib/osrs-api';
 import { ArrowUpDown, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 interface FlippingTableProps {
   data: any[];
 }
@@ -26,8 +27,9 @@ export function FlippingTable({ data }: FlippingTableProps) {
     const filtered = hideSinkItems ? data.filter(row => !isSinkItem(row.id)) : data;
     return filtered.map(row => {
       const itemDetails = items[row.id];
-      if (!itemDetails) return { ...row, alch: { profit: 0, roi: 0 } };
-      const alch = calculateAlchProfit(itemDetails.highalch || 0, row.low, naturePrice);
+      const alch = itemDetails 
+        ? calculateAlchProfit(itemDetails.highalch || 0, row.low, naturePrice)
+        : { profit: 0, roi: 0 };
       return { ...row, alch };
     });
   }, [data, items, naturePrice, hideSinkItems]);
@@ -78,10 +80,11 @@ export function FlippingTable({ data }: FlippingTableProps) {
             sortedData.map((row) => {
               const item = items[row.id];
               if (!item) return null;
+              const isSink = isSinkItem(row.id);
               return (
                 <TableRow
                   key={row.id}
-                  className="border-stone-800 hover:bg-stone-800/30 cursor-pointer transition-colors group"
+                  className="border-stone-800 hover:bg-stone-800/30 cursor-pointer transition-all duration-200 group"
                   onClick={() => setSelectedId(row.id)}
                 >
                   <TableCell className="py-2">
@@ -95,7 +98,11 @@ export function FlippingTable({ data }: FlippingTableProps) {
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="text-xs font-bold text-stone-200 truncate">{item.name}</span>
-                        {isSinkItem(row.id) && <span className="text-[8px] font-black text-amber-500 uppercase tracking-tighter">SINK ITEM</span>}
+                        {isSink && (
+                          <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/30 text-[8px] h-3 px-1 w-fit mt-0.5 leading-none">
+                            SINK
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </TableCell>
@@ -114,7 +121,7 @@ export function FlippingTable({ data }: FlippingTableProps) {
                         </span>
                       </TooltipTrigger>
                       <TooltipContent className="bg-stone-900 border-stone-800 text-[10px] text-stone-200">
-                        High Alch ({item.highalch?.toLocaleString()} gp) - Buy ({row.low.toLocaleString()} gp) - Nature ({naturePrice} gp)
+                        Alch ({item.highalch?.toLocaleString()} gp) - Buy ({row.low.toLocaleString()} gp) - Nature ({naturePrice} gp)
                       </TooltipContent>
                     </Tooltip>
                     <div className={cn("text-[9px] opacity-60 font-mono", row.alch.roi > 0 ? "text-amber-400" : "text-stone-600")}>
