@@ -3,6 +3,7 @@ import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, C
 import { useMarketStore } from '@/store/market-store';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Search } from 'lucide-react';
+import { getItemIconUrl } from '@/lib/utils';
 export function ItemSearch() {
   const [open, setOpen] = React.useState(false);
   const items = useMarketStore(s => s.items);
@@ -39,12 +40,13 @@ export function ItemSearch() {
                 onSelect={() => handleSelect(id)}
                 className="flex items-center gap-3 cursor-pointer"
               >
-                <img 
-                  src={`https://static.runescape.wiki/images/${items[id].name.replace(/ /g, '_')}_detail.png`} 
+                <img
+                  src={getItemIconUrl(items[id]?.name || '')}
                   alt=""
                   className="w-6 h-6 object-contain opacity-70"
+                  loading="lazy"
                 />
-                <span>{items[id].name}</span>
+                <span>{items[id]?.name}</span>
               </CommandItem>
             ))}
           </CommandGroup>

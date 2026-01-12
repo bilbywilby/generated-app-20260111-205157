@@ -16,16 +16,17 @@ export function AppLayout({ children, container = false }: AppLayoutProps): JSX.
   const setLoading = useMarketStore(s => s.setLoading);
   const updateHourlyPrices = useMarketStore(s => s.updateHourlyPrices);
   const itemsCount = useMarketStore(s => s.itemIds.length);
-  useQuery({
+  const { data: itemMappingData } = useQuery({
     queryKey: ['itemMapping'],
-    queryFn: async () => {
-      const data = await fetchItemMapping();
-      setItems(data);
-      setLoading(false);
-      return data;
-    },
+    queryFn: fetchItemMapping,
     staleTime: Infinity,
   });
+  useEffect(() => {
+    if (itemMappingData) {
+      setItems(itemMappingData);
+      setLoading(false);
+    }
+  }, [itemMappingData, setItems, setLoading]);
   const { data: latestPrices } = useQuery({
     queryKey: ['latestPrices'],
     queryFn: fetchLatestPrices,
