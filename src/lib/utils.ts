@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { ITEM_SINK_MAPPING, SinkMetadata } from "./sink-list"
-import { HourlyPriceData } from "./osrs-api"
+import { HourlyPriceData, calculateMargin } from "./osrs-api"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -33,7 +33,6 @@ export function calculatePercentChange(current: number, previous: number): strin
 }
 /**
  * Standardized OSRS item icon resolution.
- * Prioritizes the static ID-based URL as it is most reliable.
  */
 export function getItemIconUrl(name: string, id?: number): string {
   if (id !== undefined && id !== null) {
@@ -66,4 +65,28 @@ export function calculateIndexPerformance(
     }
   });
   return validItems > 0 ? totalChange / validItems : 0;
+}
+/**
+ * Core Dump Scanner Logic
+ * Detects market panic or bot-dumping patterns.
+ */
+export function isDumpItem(
+  hourly: HourlyPriceData | undefined,
+  prevHourly: HourlyPriceData | undefined
+): boolean {
+  if (!hourly || !prevHourly) return false;
+  const currentHigh = hourly.avgHighPrice || 0;
+  const prevHigh = prevHourly.avgHighPrice || 0;
+  const currentLow = hourly.avgLowPrice || 0;
+  if (currentHigh <= 0 || prevHigh <= 0 || currentLow <= 0) return false;
+  // 1. Volume Threshold (High + Low Volume > 10,000)
+  const totalVolume = (hourly.highPriceVolume || 0) + (hourly.lowPriceVolume || 0);
+  if (totalVolume < 10000) return false;
+  // 2. Price Velocity (Drop from previous hour > 10%)
+  const priceDropPercent = ((prevHigh - currentHigh) / prevHigh) * 100;
+  if (priceDropPercent < 10) return false;
+  // 3. Margin Sanity (Current margin ROI > 1%)
+  const margin = calculateMargin(currentHigh, currentLow);
+  if (margin.roi < 1) return false;
+  return true;
 }

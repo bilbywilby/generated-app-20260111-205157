@@ -8,10 +8,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useMarketStore } from '@/store/market-store';
-import { formatGP, cn, getItemIconUrl, isSinkItem } from '@/lib/utils';
+import { formatGP, cn, getItemIconUrl, isSinkItem, isDumpItem } from '@/lib/utils';
 import { calculateAlchProfit } from '@/lib/osrs-api';
-import { ArrowUpDown } from 'lucide-react';
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { ArrowUpDown, AlertCircle } from 'lucide-react';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 interface FlippingTableProps {
   data: any[];
@@ -21,6 +21,8 @@ export function FlippingTable({ data }: FlippingTableProps) {
   const setSelectedId = useMarketStore(s => s.setSelectedItemId);
   const naturePrice = useMarketStore(s => s.naturePrice);
   const filters = useMarketStore(s => s.flippingFilters);
+  const latest1hPrices = useMarketStore(s => s.latest1hPrices);
+  const previous1hPrices = useMarketStore(s => s.previous1hPrices);
   const hideSinkItems = filters.hideSinkItems;
   const [sortKey, setSortKey] = React.useState('profit');
   const [sortDir, setSortDir] = React.useState<'asc' | 'desc'>('desc');
@@ -31,9 +33,10 @@ export function FlippingTable({ data }: FlippingTableProps) {
       const alch = itemDetails
         ? calculateAlchProfit(itemDetails.highalch || 0, row.low, naturePrice)
         : { profit: 0, roi: 0 };
-      return { ...row, alch };
+      const isDump = isDumpItem(latest1hPrices[row.id], previous1hPrices[row.id]);
+      return { ...row, alch, isDump };
     });
-  }, [data, items, naturePrice, hideSinkItems]);
+  }, [data, items, naturePrice, hideSinkItems, latest1hPrices, previous1hPrices]);
   const sortedData = React.useMemo(() => {
     return [...processedData].sort((a, b) => {
       let valA, valB;
@@ -57,6 +60,7 @@ export function FlippingTable({ data }: FlippingTableProps) {
           <TableHeader className="bg-stone-950/80 sticky top-0 z-10">
             <TableRow className="border-stone-800 hover:bg-transparent">
               <TableHead className="text-[10px] uppercase font-mono font-bold text-stone-500 h-8 px-3">Item</TableHead>
+              <TableHead className="text-[10px] uppercase font-mono font-bold text-stone-500 h-8 px-3 text-center">Status</TableHead>
               <TableHead className="text-[10px] uppercase font-mono font-bold text-stone-500 h-8 px-3 text-right cursor-pointer group" onClick={() => handleSort('buy')}>
                 Buy <ArrowUpDown className="inline w-2.5 h-2.5 ml-1 group-hover:text-amber-500" />
               </TableHead>
@@ -98,6 +102,20 @@ export function FlippingTable({ data }: FlippingTableProps) {
                         {isSink && <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[8px] h-3.5 px-1 w-fit mt-0.5">SINK</Badge>}
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell className="py-1.5 px-3 text-center">
+                    {row.isDump && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge className="bg-rose-500/10 text-rose-500 border-rose-500/20 text-[8px] h-4 px-1 cursor-help hover:bg-amber-500 hover:text-black transition-colors">
+                            DUMP
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-stone-900 border-stone-800 text-[10px] p-2">
+                          Vol spike + 10% drop—bot/panic opportunity detected.
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </TableCell>
                   <TableCell className="text-right py-1.5 px-3 font-mono text-[11px] text-rose-400/90">{row.low.toLocaleString()}</TableCell>
                   <TableCell className="text-right py-1.5 px-3 font-mono text-[11px] text-emerald-400/90">{row.high.toLocaleString()}</TableCell>
