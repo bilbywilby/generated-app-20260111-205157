@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { useQuery } from '@tanstack/react-query';
@@ -6,7 +6,9 @@ import { fetchItemMapping, fetchLatestPrices, fetch1hPrices, HourlyPriceData, ge
 import { useMarketStore } from '@/store/market-store';
 import { ItemSearch } from '@/components/market/ItemSearch';
 import { ItemDetailSheet } from '@/components/market/ItemDetailSheet';
-import { Activity, Database, Zap } from 'lucide-react';
+import { Activity, Database, Zap, AlertTriangle } from 'lucide-react';
+import { isDumpItem } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 type AppLayoutProps = {
   children: React.ReactNode;
   container?: boolean;
@@ -18,6 +20,8 @@ export function AppLayout({ children, container = false }: AppLayoutProps): JSX.
   const setNaturePrice = useMarketStore(s => s.setNaturePrice);
   const naturePriceValue = useMarketStore(s => s.naturePrice);
   const itemsCount = useMarketStore(s => s.itemIds.length);
+  const latest1hPrices = useMarketStore(s => s.latest1hPrices);
+  const previous1hPrices = useMarketStore(s => s.previous1hPrices);
   const { data: itemMappingData } = useQuery({
     queryKey: ['itemMapping'],
     queryFn: fetchItemMapping,
@@ -54,6 +58,11 @@ export function AppLayout({ children, container = false }: AppLayoutProps): JSX.
       updateHourlyPrices(parsed);
     }
   }, [hourlyData, updateHourlyPrices]);
+  const activeDumpCount = useMemo(() => {
+    return Object.entries(latest1hPrices).filter(([id, data]) => 
+      isDumpItem(data, previous1hPrices[parseInt(id)])
+    ).length;
+  }, [latest1hPrices, previous1hPrices]);
   return (
     <SidebarProvider defaultOpen={true}>
       <AppSidebar />
@@ -65,6 +74,12 @@ export function AppLayout({ children, container = false }: AppLayoutProps): JSX.
             <ItemSearch />
           </div>
           <div className="flex items-center gap-4 font-mono text-[10px]">
+            {activeDumpCount > 3 && (
+              <Badge variant="destructive" className="animate-pulse bg-rose-600/20 border-rose-600/40 text-rose-500 text-[9px] h-6 flex gap-1.5 items-center px-2">
+                <AlertTriangle className="w-3 h-3" />
+                {activeDumpCount}+ DUMPS ACTIVE
+              </Badge>
+            )}
             <div className="flex items-center gap-1.5 text-amber-500 font-bold">
                <Zap className="w-3 h-3" />
                NATURE: {naturePriceValue > 0 ? `${naturePriceValue} GP` : '...'}

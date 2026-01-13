@@ -4,7 +4,7 @@ import { fetchLatestPrices } from '@/lib/osrs-api';
 import { useMarketStore } from '@/store/market-store';
 import { MarketTicker } from '@/components/market/MarketTicker';
 import { TrendCard } from '@/components/market/TrendCard';
-import { formatGP, calculateIndexPerformance, cn } from '@/lib/utils';
+import { formatGP, calculateIndexPerformance, cn, isDumpItem } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -16,7 +16,8 @@ import {
   Star,
   ShieldCheck,
   Cpu,
-  RefreshCw
+  RefreshCw,
+  AlertTriangle
 } from 'lucide-react';
 import { MARKET_BASKETS, BasketCategory } from '@/lib/indices';
 import { Card, CardContent } from '@/components/ui/card';
@@ -88,6 +89,23 @@ export function HomePage() {
         isPositive: false
       }));
   }, [latest1hPrices, previous1hPrices]);
+  const liveDumps = React.useMemo(() => {
+    return Object.entries(latest1hPrices)
+      .filter(([id, data]) => isDumpItem(data, previous1hPrices[parseInt(id)]))
+      .map(([id, data]) => {
+        const prev = previous1hPrices[parseInt(id)];
+        const drop = prev?.avgHighPrice ? ((prev.avgHighPrice - data.avgHighPrice!) / prev.avgHighPrice) * 100 : 0;
+        return { id: parseInt(id), drop, price: data.avgHighPrice || 0 };
+      })
+      .sort((a, b) => b.drop - a.drop)
+      .slice(0, 4)
+      .map(item => ({
+        id: item.id,
+        value: `-${item.drop.toFixed(1)}%`,
+        subValue: `${formatGP(item.price)}`,
+        isPositive: false
+      }));
+  }, [latest1hPrices, previous1hPrices]);
   const highVolume = React.useMemo(() => {
     return Object.entries(latest1hPrices)
       .map(([id, data]) => ({
@@ -155,7 +173,7 @@ export function HomePage() {
             })}
           </div>
         </div>
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
           initial="hidden"
           animate="show"
@@ -163,7 +181,7 @@ export function HomePage() {
         >
           <TrendCard title="My Watchlist" icon={<Star className="w-3 h-3 text-amber-500" />} items={watchlistItems} onSelect={setSelectedItemId} />
           <TrendCard title="Market Gainers" icon={<TrendingUp className="w-3 h-3 text-emerald-500" />} items={topGainers} onSelect={setSelectedItemId} />
-          <TrendCard title="Market Losers" icon={<TrendingDown className="w-3 h-3 text-rose-500" />} items={topLosers} onSelect={setSelectedItemId} />
+          <TrendCard title="Live Dumps" icon={<AlertTriangle className="w-3 h-3 text-rose-500" />} items={liveDumps} onSelect={setSelectedItemId} />
           <TrendCard title="Trade Volume" icon={<BarChart3 className="w-3 h-3 text-amber-500" />} items={highVolume} onSelect={setSelectedItemId} />
         </motion.div>
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
