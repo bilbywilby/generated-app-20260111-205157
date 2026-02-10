@@ -1,6 +1,6 @@
 # Cloudflare Workers Full-Stack Template
 
-[![[cloudflarebutton]]](https://developers.cloudflare.com/workers/)
+[![[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/bilbywilby/generated-app-20260111-205157)]](https://developers.cloudflare.com/workers/)
 
 A production-ready full-stack application template powered by Cloudflare Workers. Features a modern React frontend with TailwindCSS and shadcn/ui, a Hono-based API backend with Durable Objects for persistent state, and seamless local development with Vite and Bun.
 
@@ -131,7 +131,7 @@ wrangler deploy
 
 **One-Click Deploy**:
 
-[![[cloudflarebutton]]](https://developers.cloudflare.com/workers/)
+[![[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/bilbywilby/generated-app-20260111-205157)]](https://developers.cloudflare.com/workers/)
 
 ### Configuration
 
